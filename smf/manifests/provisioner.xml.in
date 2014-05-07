@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
+<service_bundle type="manifest" name="provisioner">
+  <service name="smartdc/agent/provisioner" type="service" version="@@VERSION@@">
+
+    <create_default_instance enabled="true"/>
+    <single_instance/>
+
+    <dependency name="network" grouping="require_all" restart_on="error" type="service">
+      <service_fmri value="svc:/milestone/network:default"/>
+    </dependency>
+
+    <dependency name="filesystem" grouping="require_all" restart_on="error" type="service">
+      <service_fmri value="svc:/system/filesystem/local"/>
+    </dependency>
+
+    <exec_method
+      type="method"
+      name="start"
+      exec='@@ROOT@@/smf/method/provisioner %m'
+      timeout_seconds="60">
+      <method_context>
+        <method_credential user="root" group="staff"/>
+        <method_environment>
+          <envvar name="NODE_PATH" value="/usr/node_modules:/usr/vm/node_modules:/usr/img/node_modules"/>
+          <envvar name="PATH" value="@@PREFIX@@/bin:/usr/local/bin:/opt/local/bin:/usr/bin:/usr/sbin:/bin"/>
+        </method_environment>
+      </method_context>
+    </exec_method>
+
+    <exec_method type="method" name="restart" exec=":kill" timeout_seconds="60">
+      <method_context>
+        <method_credential user="root" group="staff"/>
+      </method_context>
+    </exec_method>
+
+    <exec_method type="method" name="stop" exec=":kill" timeout_seconds="60">
+      <method_context>
+        <method_credential user="root" group="staff"/>
+      </method_context>
+    </exec_method>
+
+    <property_group name="startd" type="framework">
+      <propval name="ignore_error" type="astring" value="core,signal"/>
+    </property_group>
+
+    <property_group name="application" type="application">
+    </property_group>
+
+
+    <stability value="Evolving"/>
+
+    <template>
+      <common_name>
+        <loctext xml:lang="C">Provisioner Daemon (node)</loctext>
+      </common_name>
+    </template>
+
+  </service>
+
+</service_bundle>

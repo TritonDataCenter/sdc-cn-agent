@@ -1,0 +1,30 @@
+#!/bin/bash
+#
+# Copyright 2013 Joyent, Inc.  All rights reserved.
+#
+# SMF Startup script for the provisioner agent.
+
+set -o xtrace
+
+. /lib/svc/share/smf_include.sh
+. /lib/sdc/config.sh
+
+# Update logadm configuration for the provisioner
+mkdir -p /var/log/provisioner/logs/
+touch /var/log/provisioner/provisioner.log
+cp @@ROOT@@/etc/provisioner.logadm.conf /etc/logadm.d/provisioner.logadm.conf
+
+case "$1" in
+'start')
+    /usr/bin/ctrun -l child -o noorphan /usr/node/bin/node --abort_on_uncaught_exception @@PREFIX@@/bin/provisioner &
+    ;;
+
+'stop')
+    ;;
+
+*)
+    echo "Usage: $0 { start | stop }"
+    exit $SMF_EXIT_ERR_FATAL
+    ;;
+esac
+exit $SMF_EXIT_OK
