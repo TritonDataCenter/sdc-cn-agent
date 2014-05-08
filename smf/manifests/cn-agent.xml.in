@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE service_bundle SYSTEM "/usr/share/lib/xml/dtd/service_bundle.dtd.1">
-<service_bundle type="manifest" name="provisioner">
-  <service name="smartdc/agent/provisioner" type="service" version="@@VERSION@@">
+<service_bundle type="manifest" name="cn-agent">
+  <service name="smartdc/agent/cn-agent" type="service" version="@@VERSION@@">
 
     <create_default_instance enabled="true"/>
     <single_instance/>
@@ -17,7 +17,7 @@
     <exec_method
       type="method"
       name="start"
-      exec='@@ROOT@@/smf/method/provisioner %m'
+      exec='@@ROOT@@/smf/method/cn-agent %m'
       timeout_seconds="60">
       <method_context>
         <method_credential user="root" group="staff"/>
@@ -52,7 +52,7 @@
 
     <template>
       <common_name>
-        <loctext xml:lang="C">Provisioner Daemon (node)</loctext>
+        <loctext xml:lang="C">SmartDataCentre Compute Node Agent</loctext>
       </common_name>
     </template>
 
