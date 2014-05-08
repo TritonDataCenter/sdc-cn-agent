@@ -16,7 +16,7 @@ cp @@ROOT@@/etc/cn-agent/etc/logadm.d/cn-agent.logadm.conf
 
 case "$1" in
 'start')
-    /usr/bin/ctrun -l child -o noorphan /usr/node/bin/node --abort_on_uncaught_exception @@PREFIX@@/bin/cn-agent &
+    /usr/bin/ctrun -l child -o noorphan /usr/node/bin/node --abort_on_uncaught_exception @@ROOT@@/bin/cn-agent.js &
     ;;
 
 'stop')
