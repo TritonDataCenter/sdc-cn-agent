@@ -8,6 +8,11 @@ export PREFIX=$npm_config_prefix
 export ETC_DIR=$npm_config_etc
 export SMF_DIR=$npm_config_smfdir
 export VERSION=$npm_package_version
+export ENABLED=false
+
+if [[ $CONFIG_die_rabbit_die == "true" ]]; then
+    export ENABLED=true
+fi
 
 subfile () {
   IN=$1
