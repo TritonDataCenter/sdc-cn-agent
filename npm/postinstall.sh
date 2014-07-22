@@ -20,6 +20,7 @@ subfile () {
   sed -e "s#@@PREFIX@@#$PREFIX#g" \
       -e "s/@@VERSION@@/$VERSION/g" \
       -e "s#@@ROOT@@#$ROOT#g" \
+      -e "s/@@ENABLED@@/$ENABLED/g" \
       $IN > $OUT
 }
 
