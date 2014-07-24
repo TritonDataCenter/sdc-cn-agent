@@ -4,6 +4,10 @@ set -o xtrace
 DIR=`dirname $0`
 ROOT=$(cd `dirname $0`/.. && pwd)
 
+. /lib/sdc/config.sh
+
+load_sdc_config
+
 export PREFIX=$npm_config_prefix
 export ETC_DIR=$npm_config_etc
 export SMF_DIR=$npm_config_smfdir
