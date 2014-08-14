@@ -86,8 +86,8 @@ release: all deps docs $(SMF_MANIFESTS)
 		-e "s/DESCRIPTION/$$(json description < $(TOP)/package.json)/" \
 		-e "s/BUILDSTAMP/$(STAMP)/" \
 		-e "s/SIZE/$$(stat --printf="%s" $(TOP)/$(RELEASE_TARBALL))/" \
-		-e "s/SHA/$$(openssl sha1 -r $(TOP)/$(RELEASE_TARBALL) \
-		    | cut -d ' ' -f1)/" \
+		-e "s/SHA/$$(openssl sha1 $(TOP)/$(RELEASE_TARBALL) \
+		    | cut -d ' ' -f2)/" \
 		> $(TOP)/$(RELEASE_MANIFEST)
 	@rm -rf $(RELSTAGEDIR)
 
