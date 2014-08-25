@@ -26,7 +26,8 @@
     },
     "scripts": {
         "test": "./test.sh",
-        "postinstall":   "./npm/postinstall.sh",
+        "postinstall": "./npm/postinstall.sh",
         "postuninstall": "./npm/postuninstall.sh"
-    }
+    },
+    "license": "MPL-2.0"
 }
