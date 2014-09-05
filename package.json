@@ -16,7 +16,7 @@
         "restify": "2.6.0",
         "semver": "2.2.1",
         "sprintf": "0.1.1",
-        "tracker": "git+ssh://git@github.com:joyent/node-tracker.git#4a139906c9eb8d8684ac54cf54cd010315856042",
+        "tracker": "git+ssh://git@github.com:joyent/node-tracker.git#3a139906c9eb8d8684ac54cf54cd010315856042",
         "yaml": "0.2.3",
         "zfs": "git+ssh://git@github.com:joyent/node-zfs.git#658a90d9424c45066e3e0919dfe9b34f5636e0e9"
     },
