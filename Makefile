@@ -31,7 +31,10 @@ JSL_CONF_NODE	 = tools/jsl.node.conf
 JSL_FILES_NODE   = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
 JSSTYLE_FLAGS    = -o indent=4,doxygen,unparenthesized-return=0
-SMF_MANIFESTS_IN = smf/manifests/cn-agent.xml.in
+
+# The next line breaks the build due to a variable that eng.git sed expander
+# doesn't know about (@@ENABLED@@)
+# SMF_MANIFESTS_IN = smf/manifests/cn-agent.xml.in
 
 # Should be the same version as the platform's /usr/node/bin/node.
 NODE_PREBUILT_VERSION=v0.8.20
