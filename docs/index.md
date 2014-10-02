@@ -1,6 +1,6 @@
 ---
 title: Provisioner Agent
-markdown2extras: wiki-tables, code-friendly
+markdown2extras: tables, code-friendly
 apisections:
 ---
 <!--
@@ -168,16 +168,17 @@ IMGAPI.
 
 ### Inputs
 
-||**Field**||**Type**||**Required?**||**Description**||
-||compression||String||required||The "compression" field as required by `imgadm create`. One of "none", "gzip" or "bzip2".||
-||uuid||UUID||required||UUID of a prepared and stopped VM from which the image will be created.||
-||incremental||Boolean||optional||Whether to create an incremental image. Default is false.||
-||manifest||Object||required||Manifest details for the image to be created. Those fields that are required are mentioned in this table. See [the image manifest docs](https://mo.joyent.com/docs/imgapi/master/#image-manifests) for full details. Some fields -- e.g. 'type', 'os' -- are inherited from the origin image (the image used to create the prepared VM).||
-||manifest.uuid||UUID||required||A newly generated UUID to be used for the created image.||
-||manifest.owner||UUID||required||The UUID of an existing user who will own the image.||
-||manifest.name||String||required||The name for the image to be created.||
-||manifest.version||String||required||The version for the image to be created.||
-||imgapi_url||URL||required||The URL of the IMGAPI to which the image will be published. Typically this the DC's local IMGAPI at "http://imgapi.$domain"||
+| Field            | Type    | Required? | Description                                                                                                                                                                                                                                                                                                                              |
+| ---------------- | ------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| compression      | String  | required  | The "compression" field as required by `imgadm create`. One of "none", "gzip" or "bzip2".                                                                                                                                                                                                                                                |
+| uuid             | UUID    | required  | UUID of a prepared and stopped VM from which the image will be created.                                                                                                                                                                                                                                                                  |
+| incremental      | Boolean | optional  | Whether to create an incremental image. Default is false.                                                                                                                                                                                                                                                                                |
+| manifest         | Object  | required  | Manifest details for the image to be created. Those fields that are required are mentioned in this table. See [the image manifest docs](https://mo.joyent.com/docs/imgapi/master/#image-manifests) for full details. Some fields -- e.g. 'type', 'os' -- are inherited from the origin image (the image used to create the prepared VM). |
+| manifest.uuid    | UUID    | required  | A newly generated UUID to be used for the created image.                                                                                                                                                                                                                                                                                 |
+| manifest.owner   | UUID    | required  | The UUID of an existing user who will own the image.                                                                                                                                                                                                                                                                                     |
+| manifest.name    | String  | required  | The name for the image to be created.                                                                                                                                                                                                                                                                                                    |
+| manifest.version | String  | required  | The version for the image to be created.                                                                                                                                                                                                                                                                                                 |
+| imgapi_url       | URL     | required  | The URL of the IMGAPI to which the image will be published. Typically this the DC's local IMGAPI at "http://imgapi.$domain"                                                                                                                                                                                                              |
 
 
 
