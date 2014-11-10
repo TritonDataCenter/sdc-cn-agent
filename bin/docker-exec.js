@@ -10,7 +10,7 @@
 
 var net = require('net');
 var createDockerStdioServer =
-    require('../lib/dockerserver').createDockerStdioServer;
+    require('../lib/docker-stdio-server').createDockerStdioServer;
 
 var SERVER_CLOSE_TIMEOUT = 5000;
 
