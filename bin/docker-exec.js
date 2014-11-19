@@ -9,10 +9,9 @@
  */
 
 var net = require('net');
-var createDockerStdioServer =
-    require('../lib/docker-stdio-server').createDockerStdioServer;
+var dockerstdio = require('../lib/docker-stdio');
 
-var SERVER_CLOSE_TIMEOUT = 5000;
+var SERVER_CLOSE_TIMEOUT = 5;
 
 process.on('message', function (message) {
     var command = message.command;
@@ -21,10 +20,10 @@ process.on('message', function (message) {
     var opts = {
         command: message.command,
         uuid: message.uuid,
-        timeoutSeconds: 5
+        timeoutSeconds: message.timeoutSeconds || SERVER_CLOSE_TIMEOUT
     };
 
-    var server = createDockerStdioServer(opts);
-    process.send({ port: server.address().port });
+    dockerstdio.setupDockerExecution(opts, function (err, response) {
+        process.send(response);
+    });
 });
-
