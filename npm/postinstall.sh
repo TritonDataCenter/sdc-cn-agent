@@ -23,7 +23,7 @@ export SMF_DIR=$npm_config_smfdir
 export VERSION=$npm_package_version
 export ENABLED=false
 
-if [[ $CONFIG_die_rabbit_die == "true" ]]; then
+if [[ $CONFIG_no_rabbit == "true" ]]; then
     export ENABLED=true
 fi
 
