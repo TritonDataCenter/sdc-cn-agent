@@ -85,6 +85,7 @@ release: all deps docs $(SMF_MANIFESTS)
     $(TOP)/node_modules \
     $(TOP)/npm \
     $(TOP)/package.json \
+    $(TOP)/sapi_manifests \
     $(TOP)/smf \
     $(TOP)/test \
     $(TOP)/tools \
