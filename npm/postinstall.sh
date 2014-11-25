@@ -12,6 +12,8 @@
 set -o xtrace
 DIR=`dirname $0`
 
+ROOT=$(cd `dirname $0`/.. && pwd)
+
 export PREFIX=$npm_config_prefix
 export ETC_DIR=$npm_config_etc
 export SMF_DIR=$npm_config_smfdir
@@ -29,19 +31,21 @@ function fatal()
     exit 1
 }
 
-function subfile()
-{
+subfile () {
   IN=$1
   OUT=$2
   sed -e "s#@@PREFIX@@#$PREFIX#g" \
       -e "s/@@VERSION@@/$VERSION/g" \
+      -e "s#@@ROOT@@#$ROOT#g" \
       -e "s/@@ENABLED@@/$ENABLED/g" \
       $IN > $OUT
 }
 
 function import_smf_manifest()
 {
-    subfile "$DIR/../smf/manifests/$AGENT.xml.in" "$SMF_DIR/$AGENT.xml"
+    subfile "$ROOT/smf/method/$AGENT.in" "$ROOT/smf/method/$AGENT"
+    subfile "$ROOT/smf/manifests/$AGENT.xml.in" "$SMF_DIR/$AGENT.xml"
+    chmod +x "$ROOT/smf/method/$AGENT"
     svccfg import $SMF_DIR/$AGENT.xml
 }
 
