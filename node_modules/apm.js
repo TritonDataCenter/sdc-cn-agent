@@ -208,7 +208,7 @@ function uninstallPackage(pkg, cb) {
             var bins = packageJson.bin;
             var binNames = Object.keys(bins);
 
-            return async.forEachSeries(
+            return async.eachSeries(
                 binNames,
                 function (binName, _cb) {
                     var binLink = bindir + '/' + binName;
@@ -268,7 +268,7 @@ function installPackage(toInstall, cb) {
 
     async.waterfall([
         function (callback) {
-            async.forEachSeries(
+            async.eachSeries(
                 [ packagetmp, localtmp, installdir, bindir, smfdir, etcdir ],
                 function (dir, _cb) {
                     mkdirp(dir, _cb);
@@ -399,7 +399,7 @@ function installPackage(toInstall, cb) {
 
             binNames = Object.keys(bins);
 
-            return async.forEachSeries(binNames, function (binName, _cb) {
+            return async.eachSeries(binNames, function (binName, _cb) {
                 var from = bindir + '/' + binName;
                 var to = [
                     '..',
@@ -523,7 +523,7 @@ APM.prototype.installPackages = function(packages, callback) {
 
     var errors = [];
 
-    async.forEachSeries(
+    async.eachSeries(
         packages,
         function (_package, cb) {
             installPackage(_package, function (error) {
@@ -568,7 +568,7 @@ APM.prototype.installPackages = function(packages, callback) {
 APM.prototype.uninstallPackages = function(packages, callback) {
     var errors = [];
 
-    async.forEachSeries(
+    async.eachSeries(
         packages,
         function (_package, callback) {
             uninstallPackage(_package, function (error) {
@@ -615,7 +615,7 @@ APM.prototype.getPackages = function(callback) {
 
         files = files.sort();
 
-        async.forEach(
+        async.each(
             files,
             function (f, cb) {
                 var fn = path.join(installdir, f, 'package.json');
