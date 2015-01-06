@@ -18,8 +18,10 @@
         "restify": "2.6.0",
         "semver": "2.2.1",
         "sprintf": "0.1.1",
+        "archiver": "git+ssh://git@github.com:ctalkington/node-archiver.git#84f543ec784f436eeffc8b00966697b01c9560a3",
         "tracker": "git+ssh://git@github.com:joyent/node-tracker.git#3a139906c9eb8d8684ac54cf54cd010315856042",
         "yaml": "0.2.3",
+        "zfile": "git+ssh://git@github.com:joyent/node-zfile.git#3fe419d253e60c27f119e0b0e94d0a891fe06db6",
         "zfs": "git+ssh://git@github.com:joyent/node-zfs.git#657a90d9424c45066e3e0919dfe9b34f5636e0e9"
     },
     "directories": {
