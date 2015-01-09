@@ -14,11 +14,11 @@ var dockerstdio = require('../lib/docker-stdio');
 var SERVER_CLOSE_TIMEOUT = 5;
 
 process.on('message', function (message) {
-    var command = message.command;
+    var payload = message.payload;
     var uuid = message.uuid;
 
     var opts = {
-        command: command,
+        payload: payload,
         uuid: message.uuid,
         timeoutSeconds: message.timeoutSeconds || SERVER_CLOSE_TIMEOUT
     };
