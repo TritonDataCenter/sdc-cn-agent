@@ -31,6 +31,12 @@ function fatal()
     exit 1
 }
 
+function warn_and_exit()
+{
+    echo "warning: $*" >&2
+    exit 0
+}
+
 subfile () {
   IN=$1
   OUT=$2
@@ -94,7 +100,7 @@ function adopt_instance()
         i=$((${i} + 1))
     done
     [[ -n ${service_uuid} ]] || \
-    fatal "Unable to get service_uuid for role ${AGENT} from SAPI"
+    warn_and_exit "Unable to get service_uuid for role ${AGENT} from SAPI"
 
     i=0
     while [[ -z ${sapi_instance} && ${i} -lt 48 ]]; do
@@ -109,7 +115,7 @@ function adopt_instance()
         i=$((${i} + 1))
     done
 
-    [[ -n ${sapi_instance} ]] || fatal "Unable to adopt ${instance_uuid} into SAPI"
+    [[ -n ${sapi_instance} ]] || warn_and_exit "Unable to adopt ${instance_uuid} into SAPI"
     echo "Adopted service ${AGENT} to instance ${instance_uuid}"
 }
 
