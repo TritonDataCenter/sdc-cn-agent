@@ -1,36 +1,37 @@
 {
-    "name": "cn-agent",
-    "description": "SmartDataCenter Compute Node Agent",
-    "version": "1.0.1",
-    "author": "Joyent (joyent.com)",
-    "private": true,
-    "dependencies": {
-        "assert-plus": "0.1.5",
-        "async": "0.9.0",
-        "bunyan": "0.14.5",
-        "ctype": "0.5.4",
-        "JSV": "3.5.0",
-        "mkdirp": "0.3.4",
-        "nodeunit": "0.7.4",
-        "once": "1.3.0",
-        "optparse": "1.0.3",
-        "pty.js": "0.2.4",
-        "restify": "2.6.0",
-        "semver": "2.2.1",
-        "sprintf": "0.1.1",
-        "archiver": "git+ssh://git@github.com:ctalkington/node-archiver.git#84f543ec784f436eeffc8b00966697b01c9560a3",
-        "tracker": "git+ssh://git@github.com:joyent/node-tracker.git#3a139906c9eb8d8684ac54cf54cd010315856042",
-        "yaml": "0.2.3",
-        "zfile": "git+ssh://git@github.com:joyent/node-zfile.git#3fe419d253e60c27f119e0b0e94d0a891fe06db6",
-        "zfs": "git+ssh://git@github.com:joyent/node-zfs.git#657a90d9424c45066e3e0919dfe9b34f5636e0e9"
-    },
-    "directories": {
-        "lib": "lib"
-    },
-    "scripts": {
-        "test": "./test.sh",
-        "postinstall": "./npm/postinstall.sh",
-        "postuninstall": "./npm/postuninstall.sh"
-    },
-    "license": "MPL-2.0"
+  "name": "cn-agent",
+  "description": "SmartDataCenter Compute Node Agent",
+  "version": "1.0.1",
+  "author": "Joyent (joyent.com)",
+  "private": true,
+  "dependencies": {
+    "JSV": "3.5.0",
+    "assert-plus": "0.1.5",
+    "async": "0.9.0",
+    "bunyan": "0.14.5",
+    "ctype": "0.5.4",
+    "findit": "^2.0.0",
+    "mkdirp": "0.3.4",
+    "nodeunit": "0.7.4",
+    "once": "1.3.0",
+    "optparse": "1.0.3",
+    "pty.js": "0.2.4",
+    "restify": "2.6.0",
+    "semver": "2.2.1",
+    "sprintf": "0.1.1",
+    "tar-stream": "^1.1.2",
+    "tracker": "git+ssh://git@github.com:joyent/node-tracker.git#3a139906c9eb8d8684ac54cf54cd010315856042",
+    "yaml": "0.2.3",
+    "zfile": "git+ssh://git@github.com:joyent/node-zfile.git#3fe419d253e60c27f119e0b0e94d0a891fe06db6",
+    "zfs": "git+ssh://git@github.com:joyent/node-zfs.git#657a90d9424c45066e3e0919dfe9b34f5636e0e9"
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "./test.sh",
+    "postinstall": "./npm/postinstall.sh",
+    "postuninstall": "./npm/postuninstall.sh"
+  },
+  "license": "MPL-2.0"
 }
