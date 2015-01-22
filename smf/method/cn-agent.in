@@ -20,7 +20,8 @@ set -o xtrace
 # Update logadm configuration for cn-agent
 mkdir -p /var/log/cn-agent/logs/
 touch /var/log/cn-agent/cn-agent.log
-cp @@ROOT@@/etc/cn-agent/etc/logadm.d/cn-agent.logadm.conf /etc/logadm.d/cn-agent.logadm.conf
+logadm -w cn-agent_task_logs /var/log/cn-agent/cn-agent.log -b '/usr/vm/sbin/rotate-logs.sh -m /var/log/cn-agent/logs/ /var/log/cn-agent/cn-agent/var/log/cn-agent/cn-agent_tasks_$nodename_%FT%H:%M:%S.log' -C 168 -S 1g -p 1h
+logadm -w cn-agent_logs -C 168 -S 1g -c -p 1h -t '/var/log/cn-agent/cn-agent_$nodename_%FT%H:%M:%S.log' var/svc/log/*cn-agent*.log
 
 case "$1" in
 'start')
