@@ -20,7 +20,7 @@ set -o xtrace
 # Update logadm configuration for cn-agent
 mkdir -p /var/log/cn-agent/logs/
 touch /var/log/cn-agent/cn-agent.log
-cp @@ROOT@@/etc/cn-agent/etc/logadm.d/cn-agent.logadm.conf
+cp @@ROOT@@/etc/cn-agent/etc/logadm.d/cn-agent.logadm.conf /etc/logadm.d/cn-agent.logadm.conf
 
 case "$1" in
 'start')
