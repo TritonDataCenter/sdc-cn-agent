@@ -18,6 +18,7 @@ process.on('message', function (message) {
     var uuid = message.uuid;
 
     var opts = {
+        brand: message.brand,
         command: message.command,
         uuid: message.uuid,
         timeoutSeconds: message.timeoutSeconds || SERVER_CLOSE_TIMEOUT
