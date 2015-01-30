@@ -22,11 +22,11 @@ set -o xtrace
 #
 # 1. the regular 'cn-agent' SMF log
 #
+logadm -r cn-agent_logs             # old pre-AGENT-840 logname
 logadm -w cn_agent_logs -C 168 -S 1g -c -p 1h \
     -t '/var/log/cn-agent/cn-agent_$nodename_%FT%H:%M:%S.log' \
     /var/svc/log/*cn-agent*.log
 
-#
 # 2. Invocation of most (all?) cn-agent "tasks" log to a separate file
 #    under "/var/log/cn-agent/logs/" (see "/usr/vm/sbin/rotate-logs.sh" for the
 #    format of those filenames). For hourly rotation we call the rotate-logs.sh
@@ -34,7 +34,6 @@ logadm -w cn_agent_logs -C 168 -S 1g -c -p 1h \
 #    then `logadm` does the usual rotation to the '-t ...' template filename.
 #
 logadm -r cn-agent_task_logs        # old pre-AGENT-840 logname
-logadm -r cn-agent_logs             # old pre-AGENT-840 logname
 mkdir -p /var/log/cn-agent/logs/
 touch /var/log/cn-agent/cn-agent-tasks.log
 logadm -w cn_agent_task_logs -C 168 -S 1g -p 1h \
