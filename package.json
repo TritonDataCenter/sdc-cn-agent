@@ -10,6 +10,7 @@
     "async": "0.9.0",
     "bunyan": "0.14.5",
     "ctype": "0.5.4",
+    "lockfd": "git+ssh://git@github.com:joyent/node-lockfd.git#eeec5216dd493b44a870d0369872f56ab0788d0f",
     "findit": "^2.0.0",
     "mkdirp": "0.3.4",
     "nodeunit": "0.7.4",

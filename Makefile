@@ -60,7 +60,7 @@ NODEUNIT	= $(TOP)/node_modules/.bin/nodeunit
 #
 .PHONY: all
 all: $(SMF_MANIFESTS) | $(NPM_EXEC) $(REPO_DEPS)
-	$(NPM) install
+	MAKE_OVERRIDES='CTFCONVERT=/bin/true CTFMERGE=/bin/true' $(NPM) install
 
 $(NODEUNIT): | $(NPM_EXEC)
 	$(NPM) install
@@ -75,7 +75,7 @@ test:
 release: all deps docs $(SMF_MANIFESTS)
 	@echo "Building $(RELEASE_TARBALL)"
 	@mkdir -p $(RELSTAGEDIR)/$(NAME)
-	cd $(TOP) && $(NPM) install
+	cd $(TOP) && MAKE_OVERRIDES='CTFCONVERT=/bin/true CTFMERGE=/bin/true' $(NPM) install
 	(git symbolic-ref HEAD | awk -F/ '{print $$3}' && git describe) > $(TOP)/describe
 	cp -r \
     $(TOP)/Makefile \
