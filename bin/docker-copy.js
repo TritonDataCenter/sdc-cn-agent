@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2014, Joyent, Inc.
+ * Copyright (c) 2015, Joyent, Inc.
  */
 
 var net = require('net');
@@ -18,6 +18,7 @@ process.on('message', function (message) {
     var uuid = message.uuid;
 
     var opts = {
+        req_id: message.req_id,
         payload: payload,
         uuid: message.uuid,
         timeoutSeconds: message.timeoutSeconds || SERVER_CLOSE_TIMEOUT
