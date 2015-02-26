@@ -94,7 +94,7 @@ function adopt_instance()
         service_uuid=$(curl "${SAPI_URL}/services?type=agent&name=${AGENT}"\
             -sS -H accept:application/json | json -Ha uuid)
         if [[ -z ${service_uuid} ]]; then
-            echo "Unable to get server_uuid from sapi yet.  Sleeping..."
+            echo "Unable to get service_uuid from sapi yet.  Sleeping..."
             sleep 5
         fi
         i=$((${i} + 1))
@@ -117,6 +117,23 @@ function adopt_instance()
 
     [[ -n ${sapi_instance} ]] || warn_and_exit "Unable to adopt ${instance_uuid} into SAPI"
     echo "Adopted service ${AGENT} to instance ${instance_uuid}"
+}
+
+function add_config_agent_instance()
+{
+    local instance_uuid=$(cat $ETC_DIR/$AGENT)
+    local config_etc_dir=${ETC_DIR}/config-agent.d
+
+    cat >$config_etc_dir/$AGENT.json <<EOL
+{
+    "instance": "${instance_uuid}",
+    "localManifestDirs": ["${ROOT}"]
+}
+EOL
+
+    cagent_prefix=$PREFIX/lib/node_modules/config-agent
+    ${cagent_prefix}/build/node/bin/node $cagent_prefix/agent.js \
+        -s --sapi-url=$SAPI_URL
 }
 
 import_smf_manifest
@@ -184,6 +201,7 @@ if [[ ${valid_sapi} == "false" ]]; then
     exit 0
 else
     get_adopt_instance
+    add_config_agent_instance
 fi
 
 exit 0
