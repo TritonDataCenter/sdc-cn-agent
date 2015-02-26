@@ -122,6 +122,12 @@ function adopt_instance()
 function add_config_agent_instance()
 {
     local instance_uuid=$(cat $ETC_DIR/$AGENT)
+
+    if [[ -z ${instance_uuid} ]]; then
+        instance_uuid=$(uuid -v4)
+        echo $instance_uuid > $ETC_DIR/$AGENT
+    fi
+
     local config_etc_dir=${ETC_DIR}/config-agent.d
 
     cat >$config_etc_dir/$AGENT.json <<EOL
@@ -163,10 +169,11 @@ if [[ $? == 0 ]]; then
     have_sapi="true"
 fi
 
-# case 1) is first time this agent is installed on the headnode. Disable its
-# service until config-agent sets up its config
+# case 1) is first time this agent is installed on the headnode. We just need
+# to add the instance to config-agent since headnode.sh takes care of adopting
+# it into SAPI
 if [[ $is_headnode == "true" ]] && [[ $have_sapi == "false" ]]; then
-    echo "cannot configure new agent on headnode with no SAPI connectivity"
+    add_config_agent_instance
     exit 0
 fi
 
