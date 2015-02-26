@@ -139,8 +139,10 @@ function add_config_agent_instance()
 EOL
 
     cagent_prefix=$PREFIX/lib/node_modules/config-agent
-    ${cagent_prefix}/build/node/bin/node $cagent_prefix/agent.js \
-        -s --sapi-url=$SAPI_URL
+    if [[ -d $cagent_prefix ]]; then
+        ${cagent_prefix}/build/node/bin/node $cagent_prefix/agent.js \
+            -s --sapi-url=$SAPI_URL
+    fi
 }
 
 import_smf_manifest
