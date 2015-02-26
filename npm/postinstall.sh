@@ -129,6 +129,7 @@ function add_config_agent_instance()
     fi
 
     local config_etc_dir=${ETC_DIR}/config-agent.d
+    mkdir -p $config_etc_dir
 
     cat >$config_etc_dir/$AGENT.json <<EOL
 {
