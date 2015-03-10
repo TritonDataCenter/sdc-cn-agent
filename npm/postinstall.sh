@@ -167,7 +167,7 @@ IMGAPI_URL=http://${CONFIG_imgapi_domain}
 is_headnode=$(sysinfo | json "Boot Parameters".headnode)
 have_sapi=false
 
-(sdc-sapi /ping)
+(/opt/smartdc/bin/sdc-sapi /ping)
 if [[ $? == 0 ]]; then
     have_sapi="true"
 fi
