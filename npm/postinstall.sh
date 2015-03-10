@@ -24,6 +24,9 @@ load_sdc_config
 
 AGENT=$npm_package_name
 
+
+# ---- support functions
+
 function fatal()
 {
     echo "error: $*" >&2
@@ -67,7 +70,7 @@ function instance_exists()
     fi
 }
 
-function get_adopt_instance()
+function adopt_instance_if_necessary()
 {
     local instance_uuid=$(cat $ETC_DIR/$AGENT)
 
@@ -100,7 +103,7 @@ function adopt_instance()
         i=$((${i} + 1))
     done
     [[ -n ${service_uuid} ]] || \
-    warn_and_exit "Unable to get service_uuid for role ${AGENT} from SAPI"
+        warn_and_exit "Unable to get service_uuid for role ${AGENT} from SAPI"
 
     i=0
     while [[ -z ${sapi_instance} && ${i} -lt 48 ]]; do
@@ -137,13 +140,20 @@ function add_config_agent_instance()
     "localManifestDirs": ["${ROOT}"]
 }
 EOL
+}
 
+function config_agent_sync()
+{
     cagent_prefix=$PREFIX/lib/node_modules/config-agent
     if [[ -d $cagent_prefix ]]; then
         ${cagent_prefix}/build/node/bin/node $cagent_prefix/agent.js \
             -s --sapi-url=$SAPI_URL
     fi
 }
+
+
+
+# ---- mainline
 
 import_smf_manifest
 
@@ -210,8 +220,9 @@ if [[ ${valid_sapi} == "false" ]]; then
         service agents. No need to adopt agent into SAPI"
     exit 0
 else
-    get_adopt_instance
+    adopt_instance_if_necessary
     add_config_agent_instance
+    config_agent_sync
 fi
 
 exit 0
