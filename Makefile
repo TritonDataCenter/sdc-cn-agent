@@ -37,7 +37,7 @@ JSSTYLE_FLAGS    = -o indent=4,doxygen,unparenthesized-return=0
 # SMF_MANIFESTS_IN = smf/manifests/cn-agent.xml.in
 
 # Should be the same version as the platform's /usr/node/bin/node.
-NODE_PREBUILT_VERSION=v0.8.20
+NODE_PREBUILT_VERSION=v0.10.26
 NODE_PREBUILT_TAG=gz
 ifeq ($(shell uname -s),SunOS)
     NODE_PREBUILT_IMAGE=fd2cc906-8938-11e3-beab-4359c665ac99
@@ -60,7 +60,7 @@ NODEUNIT	= $(TOP)/node_modules/.bin/nodeunit
 #
 .PHONY: all
 all: $(SMF_MANIFESTS) | $(NPM_EXEC) $(REPO_DEPS)
-	$(NPM) install
+	MAKE_OVERRIDES='CTFCONVERT=/bin/true CTFMERGE=/bin/true' $(NPM) install
 
 $(NODEUNIT): | $(NPM_EXEC)
 	$(NPM) install
@@ -75,7 +75,7 @@ test:
 release: all deps docs $(SMF_MANIFESTS)
 	@echo "Building $(RELEASE_TARBALL)"
 	@mkdir -p $(RELSTAGEDIR)/$(NAME)
-	cd $(TOP) && $(NPM) install
+	cd $(TOP) && MAKE_OVERRIDES='CTFCONVERT=/bin/true CTFMERGE=/bin/true' $(NPM) install
 	(git symbolic-ref HEAD | awk -F/ '{print $$3}' && git describe) > $(TOP)/describe
 	cp -r \
     $(TOP)/Makefile \
@@ -85,6 +85,7 @@ release: all deps docs $(SMF_MANIFESTS)
     $(TOP)/node_modules \
     $(TOP)/npm \
     $(TOP)/package.json \
+    $(TOP)/sapi_manifests \
     $(TOP)/smf \
     $(TOP)/test \
     $(TOP)/tools \

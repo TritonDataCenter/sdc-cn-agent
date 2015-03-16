@@ -7,7 +7,7 @@
 -->
 
 <!--
-    Copyright (c) 2014, Joyent, Inc.
+    Copyright (c) 2015, Joyent, Inc.
 -->
 
 <service_bundle type="manifest" name="cn-agent">
@@ -27,11 +27,12 @@
     <exec_method
       type="method"
       name="start"
-      exec='@@ROOT@@/smf/method/cn-agent %m'
+      exec="@@ROOT@@/smf/method/cn-agent %m"
       timeout_seconds="60">
       <method_context>
         <method_credential user="root" group="staff"/>
         <method_environment>
+          <!-- TODO: NODE_PATH wanted here? -->
           <envvar name="NODE_PATH" value="/usr/node_modules:/usr/vm/node_modules:/usr/img/node_modules"/>
           <envvar name="PATH" value="@@PREFIX@@/bin:/usr/local/bin:/opt/local/bin:/usr/bin:/usr/sbin:/bin"/>
         </method_environment>
@@ -57,7 +58,6 @@
     <property_group name="application" type="application">
     </property_group>
 
-
     <stability value="Evolving"/>
 
     <template>
@@ -67,5 +67,4 @@
     </template>
 
   </service>
-
 </service_bundle>
