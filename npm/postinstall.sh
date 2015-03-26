@@ -47,14 +47,14 @@ function subfile() {
         -e "s/@@VERSION@@/$VERSION/g" \
         -e "s#@@ROOT@@#$ROOT#g" \
         -e "s/@@ENABLED@@/false/g" \
-        -e "s/@@PORT/5310/g"
+        -e "s/@@PORT@@/5310/g"
         $IN > $OUT
   else
     sed -e "s#@@PREFIX@@#$PREFIX#g" \
         -e "s/@@VERSION@@/$VERSION/g" \
         -e "s#@@ROOT@@#$ROOT#g" \
         -e "s/@@ENABLED@@/$ENABLED/g" \
-        -e "s/@@PORT/5309/g"
+        -e "s/@@PORT@@/5309/g"
         $IN > $OUT
   fi
 }
