@@ -42,19 +42,19 @@ function warn_and_exit()
 function subfile() {
   IN=$1
   OUT=$2
-  if [[ -z "$3" ]]; then
+  if [[ ! -z "$3" ]]; then
     sed -e "s#@@PREFIX@@#$PREFIX#g" \
         -e "s/@@VERSION@@/$VERSION/g" \
         -e "s#@@ROOT@@#$ROOT#g" \
         -e "s/@@ENABLED@@/false/g" \
-        -e "s/@@PORT@@/5310/g"
+        -e "s/@@PORT@@/5310/g" \
         $IN > $OUT
   else
     sed -e "s#@@PREFIX@@#$PREFIX#g" \
         -e "s/@@VERSION@@/$VERSION/g" \
         -e "s#@@ROOT@@#$ROOT#g" \
         -e "s/@@ENABLED@@/$ENABLED/g" \
-        -e "s/@@PORT@@/5309/g"
+        -e "s/@@PORT@@/5309/g" \
         $IN > $OUT
   fi
 }
