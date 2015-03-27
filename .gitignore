@@ -8,5 +8,5 @@ docs/*.html
 cscope.in.out
 cscope.po.out
 cscope.out
-/smf/manifests/provisioner.xml
-/smf/manifests/cn-agent.xml
+/smf/manifests/*.xml
+*.vim

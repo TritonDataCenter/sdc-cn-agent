@@ -10,8 +10,8 @@
     Copyright (c) 2015, Joyent, Inc.
 -->
 
-<service_bundle type="manifest" name="cn-agent">
-  <service name="smartdc/agent/cn-agent" type="service" version="@@VERSION@@">
+<service_bundle type="manifest" name="cn-agent-update">
+  <service name="smartdc/agent/cn-agent-update" type="service" version="@@VERSION@@">
 
     <create_default_instance enabled="@@ENABLED@@"/>
     <single_instance/>
@@ -63,7 +63,7 @@
 
     <template>
       <common_name>
-        <loctext xml:lang="C">SmartDataCentre Compute Node Agent</loctext>
+        <loctext xml:lang="C">SmartDataCentre Compute Node Agent Update</loctext>
       </common_name>
     </template>
 

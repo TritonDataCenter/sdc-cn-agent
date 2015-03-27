@@ -42,11 +42,21 @@ function warn_and_exit()
 function subfile() {
   IN=$1
   OUT=$2
-  sed -e "s#@@PREFIX@@#$PREFIX#g" \
-      -e "s/@@VERSION@@/$VERSION/g" \
-      -e "s#@@ROOT@@#$ROOT#g" \
-      -e "s/@@ENABLED@@/$ENABLED/g" \
-      $IN > $OUT
+  if [[ ! -z "$3" ]]; then
+    sed -e "s#@@PREFIX@@#$PREFIX#g" \
+        -e "s/@@VERSION@@/$VERSION/g" \
+        -e "s#@@ROOT@@#$ROOT#g" \
+        -e "s/@@ENABLED@@/false/g" \
+        -e "s/@@PORT@@/5310/g" \
+        $IN > $OUT
+  else
+    sed -e "s#@@PREFIX@@#$PREFIX#g" \
+        -e "s/@@VERSION@@/$VERSION/g" \
+        -e "s#@@ROOT@@#$ROOT#g" \
+        -e "s/@@ENABLED@@/$ENABLED/g" \
+        -e "s/@@PORT@@/5309/g" \
+        $IN > $OUT
+  fi
 }
 
 function import_smf_manifest()
@@ -56,6 +66,9 @@ function import_smf_manifest()
 
     subfile "$ROOT/smf/manifests/$AGENT.xml.in" "$SMF_DIR/$AGENT.xml"
     svccfg import $SMF_DIR/$AGENT.xml
+
+    subfile "$ROOT/smf/manifests/$AGENT-update.xml.in" "$SMF_DIR/$AGENT-update.xml" true
+    svccfg import $SMF_DIR/$AGENT-update.xml
 }
 
 function instance_exists()
