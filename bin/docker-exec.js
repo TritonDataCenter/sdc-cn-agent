@@ -21,6 +21,7 @@ process.on('message', function (message) {
         req_id: message.req_id,
         brand: message.brand,
         command: message.command,
+        platform: message.platform,
         uuid: message.uuid,
         timeoutSeconds: message.timeoutSeconds || SERVER_CLOSE_TIMEOUT
     };
