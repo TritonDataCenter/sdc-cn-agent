@@ -1,4 +1,7 @@
 {
+{{#experimental_fluentd_host}}
+	"fluentd_host": "{{{experimental_fluentd_host}}}",
+{{/experimental_fluentd_host}}
 	"cnapi": { "url": "http://{{{CNAPI_SERVICE}}}" },
 	"no_rabbit": {{#no_rabbit}}true{{/no_rabbit}}{{^no_rabbit}}false{{/no_rabbit}}
 }

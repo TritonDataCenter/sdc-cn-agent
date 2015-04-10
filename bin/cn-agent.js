@@ -50,6 +50,12 @@ try {
 
 if (agentConfig.no_rabbit) {
     var app = new App(options);
+
+    // EXPERIMENTAL
+    if (agentConfig.fluentd_host) {
+        process.env.FLUENTD_HOST = agentConfig.fluentd_host;
+    }
+
     app.start();
 } else {
     log.warn('"no_rabbit" flag is not true, cn-agent will now sleep');
