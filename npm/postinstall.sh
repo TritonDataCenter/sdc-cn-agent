@@ -97,6 +97,8 @@ function adopt_instance_if_necessary()
     fi
 }
 
+# This is a best effort. We rely into a cn-agent dedicated task to register
+# new agent instances when needed.
 function adopt_instance()
 {
     local instance_uuid=$1
@@ -106,32 +108,20 @@ function adopt_instance()
     local sapi_instance=""
     local i=0
 
-    while [[ -z ${service_uuid} && ${i} -lt 48 ]]; do
-        service_uuid=$(curl "${SAPI_URL}/services?type=agent&name=${AGENT}"\
-            -sS -H accept:application/json | json -Ha uuid)
-        if [[ -z ${service_uuid} ]]; then
-            echo "Unable to get service_uuid from sapi yet.  Sleeping..."
-            sleep 5
-        fi
-        i=$((${i} + 1))
-    done
+    service_uuid=$(curl "${SAPI_URL}/services?type=agent&name=${AGENT}"\
+        -sS -H accept:application/json | json -Ha uuid)
+
     [[ -n ${service_uuid} ]] || \
         warn_and_exit "Unable to get service_uuid for role ${AGENT} from SAPI"
 
-    i=0
-    while [[ -z ${sapi_instance} && ${i} -lt 48 ]]; do
-        sapi_instance=$(curl ${SAPI_URL}/instances -sS -X POST \
-            -H content-type:application/json \
-            -d "{ \"service_uuid\" : \"${service_uuid}\", \"uuid\" : \"${instance_uuid}\" }" \
-        | json -H uuid)
-        if [[ -z ${sapi_instance} ]]; then
-            echo "Unable to adopt ${AGENT} ${instance_uuid} into sapi yet.  Sleeping..."
-            sleep 5
-        fi
-        i=$((${i} + 1))
-    done
+    sapi_instance=$(curl ${SAPI_URL}/instances -sS -X POST \
+        -H content-type:application/json \
+        -d "{ \"service_uuid\" : \"${service_uuid}\", " \
+            "\"uuid\" : \"${instance_uuid}\" }" \
+    | json -H uuid)
 
-    [[ -n ${sapi_instance} ]] || warn_and_exit "Unable to adopt ${instance_uuid} into SAPI"
+    [[ -n ${sapi_instance} ]] \
+        || warn_and_exit "Unable to adopt ${instance_uuid} into SAPI"
     echo "Adopted service ${AGENT} to instance ${instance_uuid}"
 }
 
