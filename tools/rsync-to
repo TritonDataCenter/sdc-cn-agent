@@ -24,16 +24,14 @@ if [[ $(uname -s) != "SunOS" ]]; then
     extraOpts="--exclude *.node --exclude build"
 #else
 #    # Clean node_modules everytime.
-#    ssh $NODE rm -rf /zones/$SDC_ZONE/root/opt/smartdc/sdc/node_modules/imgapi-cli/node_modules
+#    ssh $NODE rm -rf /zones/$SDC_ZONE/root/opt/smartdc/sdc/node_modules/cn-agent/node_modules
 fi
 
 rsync -av ${TOP}/ \
-    $NODE:/var/tmp/provisioner/ \
+    $NODE:/opt/smartdc/agents/lib/node_modules/cn-agent \
     $extraOpts \
     --exclude .git/ \
     --exclude /deps/ \
     --exclude /docs/ \
     --exclude /tools/ \
     --exclude /tmp/
-
-ssh $NODE cp -R /opt/smartdc/agents/lib/node_modules/provisioner/node_modules/ /var/tmp/provisioner/
