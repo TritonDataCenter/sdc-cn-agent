@@ -35,3 +35,10 @@ rsync -av ${TOP}/ \
     --exclude /docs/ \
     --exclude /tools/ \
     --exclude /tmp/
+
+state=$(ssh ${NODE} svcs -H -o state cn-agent)
+if [[ "$state" == "maintenance" ]]; then
+    ssh ${NODE} svcadm clear cn-agent
+else
+    ssh ${NODE} svcadm restart cn-agent
+fi
