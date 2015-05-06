@@ -23,6 +23,7 @@ var bunyan = require('bunyan');
 var App = require('../lib/app');
 
 var logname = 'cn-agent';
+var smartdcconfig = require('../lib/smartdc-config');
 
 var log = bunyan.createLogger({ name: logname });
 
@@ -40,6 +41,29 @@ var options = {
 var agentConfigPath = '/opt/smartdc/agents/etc/cn-agent.config.json';
 var agentConfig;
 
+function firstAdminIp(sysinfo) {
+    var interfaces;
+    var mac;
+
+    interfaces = sysinfo['Network Interfaces'];
+
+    for (var iface in interfaces) {
+        if (!interfaces.hasOwnProperty(iface)) {
+            continue;
+        }
+
+        var nic = interfaces[iface]['NIC Names'];
+        var isAdmin = nic.indexOf('admin') !== -1;
+        if (isAdmin) {
+            ip = interfaces[iface].ip4addr;
+            return ip;
+        }
+    }
+
+    throw new Error('No NICs with name "admin" detected.');
+}
+
+
 try {
     agentConfig = JSON.parse(fs.readFileSync(agentConfigPath, 'utf-8'));
 } catch (e) {
@@ -49,14 +73,25 @@ try {
 }
 
 if (agentConfig.no_rabbit) {
-    var app = new App(options);
 
-    // EXPERIMENTAL
-    if (agentConfig.fluentd_host) {
-        process.env.FLUENTD_HOST = agentConfig.fluentd_host;
-    }
+    smartdcconfig.sysinfo(function (err, sysinfo) {
+        if (err) {
+            throw err;
+        }
 
-    app.start();
+        var ip = firstAdminIp(sysinfo);
+        options.bindIp = ip;
+
+        var app = new App(options);
+
+        // EXPERIMENTAL
+        if (agentConfig.fluentd_host) {
+            process.env.FLUENTD_HOST = agentConfig.fluentd_host;
+        }
+
+        app.start();
+    });
+
 } else {
     log.warn('"no_rabbit" flag is not true, cn-agent will now sleep');
     // http://nodejs.org/docs/latest/api/all.html#all_settimeout_cb_ms
