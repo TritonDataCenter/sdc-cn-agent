@@ -116,8 +116,8 @@ function adopt_instance()
 
     sapi_instance=$(curl ${SAPI_URL}/instances -sS -X POST \
         -H content-type:application/json \
-        -d "{ \"service_uuid\" : \"${service_uuid}\", " \
-            "\"uuid\" : \"${instance_uuid}\" }" \
+        -d "{ \"service_uuid\" : \"${service_uuid}\", \
+            \"uuid\" : \"${instance_uuid}\" }" \
     | json -H uuid)
 
     [[ -n ${sapi_instance} ]] \
