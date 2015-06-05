@@ -54,7 +54,7 @@ function setup_logadm {
 case "$1" in
 'start')
     setup_logadm
-    /usr/bin/ctrun -l child -o noorphan /usr/node/bin/node --abort_on_uncaught_exception @@ROOT@@/bin/cn-agent.js &
+    /usr/bin/ctrun -l child -o noorphan @@ROOT@@/node/bin/node --abort_on_uncaught_exception @@ROOT@@/bin/cn-agent &
     ;;
 
 'stop')

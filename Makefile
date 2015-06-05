@@ -78,19 +78,25 @@ release: all deps docs $(SMF_MANIFESTS)
 	cd $(TOP) && MAKE_OVERRIDES='CTFCONVERT=/bin/true CTFMERGE=/bin/true' $(NPM) install
 	(git symbolic-ref HEAD | awk -F/ '{print $$3}' && git describe) > $(TOP)/describe
 	cp -r \
-    $(TOP)/Makefile \
-    $(TOP)/bin \
-    $(TOP)/build \
-    $(TOP)/describe \
-    $(TOP)/lib \
-    $(TOP)/node_modules \
-    $(TOP)/npm \
-    $(TOP)/package.json \
-    $(TOP)/sapi_manifests \
-    $(TOP)/smf \
-    $(TOP)/test \
-    $(TOP)/tools \
-    $(RELSTAGEDIR)/cn-agent
+		$(TOP)/Makefile \
+		$(TOP)/bin \
+		$(TOP)/build/node \
+		$(TOP)/describe \
+		$(TOP)/lib \
+		$(TOP)/node_modules \
+		$(TOP)/npm \
+		$(TOP)/package.json \
+		$(TOP)/sapi_manifests \
+		$(TOP)/smf \
+		$(TOP)/test \
+		$(TOP)/tools \
+		$(RELSTAGEDIR)/$(NAME)
+	# Trim node
+	rm -rf \
+		$(RELSTAGEDIR)/$(NAME)/node/bin/npm \
+		$(RELSTAGEDIR)/$(NAME)/node/lib/node_modules \
+		$(RELSTAGEDIR)/$(NAME)/node/include \
+		$(RELSTAGEDIR)/$(NAME)/node/share
 	uuid -v4 >$(RELSTAGEDIR)/cn-agent/image_uuid
 	(cd $(RELSTAGEDIR) && $(TAR) -zcf $(TOP)/$(RELEASE_TARBALL) *)
 	cat $(TOP)/manifest.tmpl | sed \
