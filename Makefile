@@ -80,7 +80,7 @@ release: all deps docs $(SMF_MANIFESTS)
 	cp -r \
 		$(TOP)/Makefile \
 		$(TOP)/bin \
-		$(TOP)/build \
+		$(TOP)/build/node \
 		$(TOP)/describe \
 		$(TOP)/lib \
 		$(TOP)/node_modules \
@@ -90,7 +90,7 @@ release: all deps docs $(SMF_MANIFESTS)
 		$(TOP)/smf \
 		$(TOP)/test \
 		$(TOP)/tools \
-		$(RELSTAGEDIR)/cn-agent
+		$(RELSTAGEDIR)/$(NAME)
 	uuid -v4 >$(RELSTAGEDIR)/cn-agent/image_uuid
 	(cd $(RELSTAGEDIR) && $(TAR) -zcf $(TOP)/$(RELEASE_TARBALL) *)
 	cat $(TOP)/manifest.tmpl | sed \
