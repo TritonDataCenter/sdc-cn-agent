@@ -91,6 +91,12 @@ release: all deps docs $(SMF_MANIFESTS)
 		$(TOP)/test \
 		$(TOP)/tools \
 		$(RELSTAGEDIR)/$(NAME)
+	# Trim node
+	rm -rf \
+		$(RELSTAGEDIR)/$(NAME)/node/bin/npm \
+		$(RELSTAGEDIR)/$(NAME)/node/lib/node_modules \
+		$(RELSTAGEDIR)/$(NAME)/node/include \
+		$(RELSTAGEDIR)/$(NAME)/node/share
 	uuid -v4 >$(RELSTAGEDIR)/cn-agent/image_uuid
 	(cd $(RELSTAGEDIR) && $(TAR) -zcf $(TOP)/$(RELEASE_TARBALL) *)
 	cat $(TOP)/manifest.tmpl | sed \
