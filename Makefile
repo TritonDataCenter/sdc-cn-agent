@@ -80,6 +80,7 @@ release: all deps docs $(SMF_MANIFESTS)
 	cp -r \
     $(TOP)/Makefile \
     $(TOP)/bin \
+    $(TOP)/build \
     $(TOP)/describe \
     $(TOP)/lib \
     $(TOP)/node_modules \
