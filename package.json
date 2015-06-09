@@ -12,7 +12,7 @@
     "ctype": "0.5.4",
     "effluent-logger": "git+https://github.com/joshwilsdon/effluent-logger.git#d662f161a07f94045ad2afb45442931511c40e51",
     "lockfd": "git+ssh://git@github.com:joyent/node-lockfd.git#eeec5216dd493b44a870d0369872f56ab0788d0f",
-    "vmadm": "git+ssh://git@github.com:joyent/node-vmadm.git#e36c0db4498997069ec76c1bf76ab934902937a9",
+    "vmadm": "git+ssh://git@github.com:joyent/node-vmadm.git#ed60457450e3f1f3f23ef8a18b34ceba9eb7ebd9",
     "findit": "^2.0.0",
     "mkdirp": "0.3.4",
     "nodeunit": "0.9.1",
