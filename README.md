@@ -27,6 +27,16 @@ from creating a virtual machine to something as simple as creating or listing
 ZFS datasets.
 
 
+# Repository
+
+Some notable parts of the repo:
+
+    node_modules/fw         This is a copy of smartos-live.git:src/fw
+                            and should be kept in sync. It is used to
+                            provide a node API to `fw.{update,del,add}`
+                            for firewall data.
+
+
 # Development
 
 To run the cn-agent:
