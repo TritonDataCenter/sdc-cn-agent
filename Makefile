@@ -27,7 +27,7 @@
 #
 DOC_FILES =		index.md
 JS_FILES :=		$(shell ls *.js 2>/dev/null) \
-			$(shell find lib test -name '*.js' 2>/dev/null)
+			$(shell find bin lib test -name '*.js' 2>/dev/null)
 JSL_CONF_NODE =		tools/jsl.node.conf
 JSL_FILES_NODE =	$(JS_FILES)
 JSSTYLE_FILES =		$(JS_FILES)

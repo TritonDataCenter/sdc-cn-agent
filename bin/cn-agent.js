@@ -12,8 +12,9 @@
 var TaskAgent = require('../lib/task_agent/task_agent');
 var fs = require('fs');
 var path = require('path');
-var createTaskDispatchFn = require('../lib/task_agent/dispatch').createTaskDispatchFn;
-var createHttpTaskDispatchFn = require('../lib/task_agent/dispatch').createHttpTaskDispatchFn;
+var dispatch = require('../lib/task_agent/dispatch');
+var createTaskDispatchFn = dispatch.createTaskDispatchFn;
+var createHttpTaskDispatchFn = dispatch.createHttpTaskDispatchFn;
 var os = require('os');
 var exec = require('child_process').exec;
 var tty = require('tty');
@@ -43,7 +44,6 @@ var agentConfig;
 
 function firstAdminIp(sysinfo) {
     var interfaces;
-    var mac;
 
     interfaces = sysinfo['Network Interfaces'];
 
@@ -55,7 +55,7 @@ function firstAdminIp(sysinfo) {
         var nic = interfaces[iface]['NIC Names'];
         var isAdmin = nic.indexOf('admin') !== -1;
         if (isAdmin) {
-            ip = interfaces[iface].ip4addr;
+            var ip = interfaces[iface].ip4addr;
             return ip;
         }
     }

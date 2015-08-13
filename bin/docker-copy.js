@@ -14,12 +14,9 @@ var dockerstdio = require('../lib/docker-stdio');
 var SERVER_CLOSE_TIMEOUT = 5;
 
 process.on('message', function (message) {
-    var payload = message.payload;
-    var uuid = message.uuid;
-
     var opts = {
         req_id: message.req_id,
-        payload: payload,
+        payload: message.payload,
         uuid: message.uuid,
         timeoutSeconds: message.timeoutSeconds || SERVER_CLOSE_TIMEOUT
     };
