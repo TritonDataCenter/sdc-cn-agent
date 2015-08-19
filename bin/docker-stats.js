@@ -8,6 +8,121 @@
  * Copyright (c) 2015, Joyent, Inc.
  */
 
+/*
+ * # Overview:
+ *
+ * Provides 'docker stat' information over a socket connection.
+ *
+ * Uses kstats to gather information for a given zone, converting kstat values
+ * into equivalent docker stat (cgroups) information.
+ *
+ * A lot of the docker (cgroups) stats are unavailable in SDC, see below
+ * stats structure breakdown for the details.
+ *
+ * # Information:
+ *
+ * - Cgroups overview:
+ *   https://www.kernel.org/doc/Documentation/cgroups/cgroups.txt
+ * - Docker cgroups code:
+ *   https://github.com/opencontainers/runc/tree/master/libcontainer/cgroups/fs
+ *
+ * # Stats structure breakdown:
+ *
+ * // Docs: https://www.kernel.org/doc/Documentation/cgroups/memory.txt
+ * // Kstats: class 'net', name 'z28_eth0'
+ * "network": {
+ *     "rx_bytes": net.eth.rbytes,
+ *     "rx_packets": net.eth.ipackets,
+ *     "rx_errors": net.eth.ierrors,
+ *     "tx_bytes": net.eth.obytes,
+ *     "tx_packets": net.eth.opackets,
+ *     "tx_errors": net.eth.oerrors,
+ *
+ *     "rx_dropped": < MISSING >, // use
+ *     "tx_dropped": < MISSING >
+ * },
+ *
+ *
+ * // Docs: https://www.kernel.org/doc/Documentation/cgroups/cpuacct.txt
+ * // Docs: https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt
+ * // Kstats: class 'zone_caps', name 'cpucaps_zone_28'
+ * // Kstats: class 'zones', name 'zones_misc'
+ * "cpu_stats": {
+ *     // Fabricated as 100 (as cpucaps_zone.usage is a percentage value)
+ *     "system_cpu_usage": 100,
+ *     "cpu_usage": {
+ *         "total_usage": zone_caps.cpucaps_zone.usage,
+ *         "percpu_usage": [zone_caps.cpucaps_zone.usage],
+ *         "usage_in_kernelmode": zones.zone_misc.nsecs_sys,
+ *         "usage_in_usermode": zones.zone_misc.nsecs_user
+ *     },
+ *     "throttling_data": {
+ *         "throttled_time": zone_caps.cpucaps_zone.nwait
+ *         "periods": < MISSING >,
+ *         "throttled_periods": < MISSING >,
+ *     }
+ * },
+ *
+ *
+ * // Docs: https://www.kernel.org/doc/Documentation/cgroups/memory.txt
+ * // Using kstats: class 'zone_memory_cap', name 'memory_cap'
+ * "memory_stats": {
+ *     "usage": zone_memory_cap.memory_cap.rss,
+ *     "failcnt": zone_memory_cap.memory_cap.anon_alloc_fail,
+ *     "limit": zone_memory_cap.memory_cap.physcap,
+ *     "stats": {
+ *         "rss": zone_memory_cap.memory_cap.rss,
+ *         "swap": zone_memory_cap.memory_cap.swap,
+ *         "total_swap": zone_memory_cap.memory_cap.swapcap,
+ *
+ *         "inactive_anon": total_swap - swap,
+ *         "total_active_anon": swap,
+ *
+ *         "active_anon": < MISSING >,
+ *         "active_file": < MISSING >,
+ *         "cache": < MISSING >,
+ *         "hierarchical_memory_limit": < MISSING >,
+ *         "hierarchical_memsw_limit": < MISSING >,
+ *         "inactive_file": < MISSING >,
+ *         "mapped_file": < MISSING >,
+ *         "pgfault": < MISSING >,
+ *         "pgmajfault": < MISSING >,
+ *         "pgpgin": < MISSING >,
+ *         "pgpgout": < MISSING >,
+ *         "rss_huge": < MISSING >,
+ *         "total_active_file": < MISSING >,
+ *         "total_cache": < MISSING >,
+ *         "total_inactive_anon": < MISSING >,
+ *         "total_inactive_file": < MISSING >,
+ *         "total_mapped_file": < MISSING >,
+ *         "total_pgfault": < MISSING >,
+ *         "total_pgmajfault": < MISSING >,
+ *         "total_pgpgin": < MISSING >,
+ *         "total_pgpgout": < MISSING >,
+ *         "total_rss": < MISSING >,
+ *         "total_rss_huge": < MISSING >,
+ *         "total_unevictable": < MISSING >,
+ *         "total_writeback": < MISSING >,
+ *         "unevictable": < MISSING >,
+ *         "writeback": < MISSING >
+ *     },
+ *     "max_usage": < MISSING >,
+ * },
+ *
+ *
+ *  Docs: https://www.kernel.org/doc/Documentation/cgroups/blkio-controller.txt
+ * "blkio_stats": {
+ *     "io_service_bytes_recursive": < MISSING >,
+ *     "io_serviced_recursive": < MISSING >,
+ *     "io_queue_recursive": < MISSING >,
+ *     "io_service_time_recursive": < MISSING >,
+ *     "io_wait_time_recursive": < MISSING >,
+ *     "io_merged_recursive": < MISSING >,
+ *     "io_time_recursive": < MISSING >,
+ *     "sectors_recursive": < MISSING >
+ * }
+ */
+
 var net = require('net');
 var assert = require('assert-plus');
 var bunyan = require('bunyan');
@@ -16,11 +131,14 @@ var kstat = require('kstat');
 var sprintf = require('sprintf').sprintf;
 
 var SERVER_CLOSE_TIMEOUT = 60 * 1000; // 1 minute
-var UPDATE_FREQUENCY = 1000; // every second
+var UPDATE_FREQUENCY = 1000; // every second - send a json stats object
 
-// For debugging - when true, will put log messages into own logs file.
+// For debugging - when true, creates own logs file for all logging messages.
 var DO_OWN_LOGGING = false;
 
+/*
+ * Main entry point.
+ */
 process.on('message', function (message) {
     assert.object(message, 'message');
     assert.object(message.payload, 'payload');
@@ -145,9 +263,6 @@ function addNetworkStats(stats, name, data) {
 }
 
 function addCpuStats(stats, name, data, opts) {
-    var i;
-    var cpu_num;
-    var percpu;
     var lastStats = opts.lastStats;
 
     if (!stats.cpu_stats) {
@@ -196,16 +311,15 @@ function addCpuStats(stats, name, data, opts) {
             stats.cpu_stats.system_cpu_usage = 100;
         }
 
-    } else if (name.substr(0, 16) === 'cpucaps_project_') {
-        cpu_num = parseInt(name.substr(16), 10);
-        percpu = stats.cpu_stats.cpu_usage.percpu_usage;
-        // Ensure any missing cpus are filled.
-        if (cpu_num > percpu.length) {
-            for (i = percpu.length; i < cpu_num; i++) {
-                percpu.push(0);
-            }
-        }
-        percpu.push(data.usage);
+        // Always just one CPU?
+        stats.cpu_stats.cpu_usage.percpu_usage =
+            [stats.cpu_stats.cpu_usage.total_usage];
+
+        stats.cpu_stats.throttling_data.throttled_time = data.nwait;
+
+    } else if (name.substr(0, 9) === 'zone_misc') {
+        stats.cpu_stats.cpu_usage.usage_in_usermode = data.nsecs_user;
+        stats.cpu_stats.cpu_usage.usage_in_kernelmode = data.nsecs_sys;
     }
 }
 
@@ -254,13 +368,21 @@ function addMemoryStats(stats, name, data) {
     }
 
     var mem = stats.memory_stats;
-    mem.usage += data.rss;
-    mem.limit += data.physcap;
-    mem.failcnt += data.anon_alloc_fail;
-    mem.stats.pgpgin += data.pgpgin;
-    mem.stats.pgpgout += data.pagedout;
-    mem.stats.swap += data.swap;
-    mem.stats.total_swap += data.swapcap;
+    mem.usage = data.rss;
+    mem.limit = data.physcap;
+    mem.failcnt = data.anon_alloc_fail;
+    mem.stats.swap = data.swap;
+    mem.stats.total_active_anon = data.swap;
+    mem.stats.total_swap = data.swapcap;
+
+    // Calculate inactive_anon as: total_swap - swap
+    mem.stats.inactive_anon = Math.max(0, data.swapcap - data.swap);
+
+    // These don't map - as these paging stats are only for when we are over the
+    // phys mem cap and not for general page in/out.
+    //
+    // mem.stats.pgpgin += data.pgpgin;
+    // mem.stats.pgpgout += data.pagedout;
 }
 
 function addBlockIOStats(stats) {
@@ -299,8 +421,8 @@ function collectOneKstatRead(kst, opts) {
                 addMemoryStats(stats, kst[i].name, data);
             } else if (className === 'zone_caps') {
                 addCpuStats(stats, kst[i].name, data, opts);
-            } else if (className === 'project_caps') {
-                addCpuStats(stats, kst[i].name, data, opts);
+            } else if (className === 'zone_misc') {
+                addCpuStats(stats, className, data, opts);
             }
         }
     }
