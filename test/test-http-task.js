@@ -65,12 +65,14 @@ function teardown(cb) {
 
 function testExecuteTaskHttp(test) {
     test.expect(3);
-    client.get('/tasks', function (err, req, res, tasks) {
+    var payload = {
+        task: 'nop',
+        params: {}
+    };
+    client.post('/tasks', payload, function (err, req, res, tasks) {
         test.ifError(err);
-        if (!err) {
-            test.ok(res, 'got a response');
-            test.equal(res.statusCode, 200, 'GET /tasks returned 200');
-        }
+        test.ok(res, 'got a response');
+        test.equal(res.statusCode, 200, 'GET /tasks returned success');
         test.done();
     });
 }
