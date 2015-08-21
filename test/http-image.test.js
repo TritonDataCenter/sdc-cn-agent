@@ -98,7 +98,10 @@ function testGetImageFileHttp(test) {
         test.ifError(err);
         if (!err) {
             test.ok(res, 'got a response');
-            test.equal(res.statusCode, 200, 'GET /images/:uuid/file returned 200');
+            test.equal(
+                res.statusCode,
+                200,
+                'GET /images/:uuid/file returned 200');
         }
         test.done();
     });
@@ -110,7 +113,10 @@ function testGetNonImageFileHttp(test) {
     client.get(path, function (err, req, res, tasks) {
         if (err) {
             test.ok(res, 'got a response');
-            test.equal(res.statusCode, 404, 'GET /images/:uuid/file returned 404');
+            test.equal(
+                res.statusCode,
+                404,
+                'GET /images/:uuid/file returned 404');
         }
         test.done();
     });

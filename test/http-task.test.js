@@ -70,14 +70,17 @@ function testExecuteTaskHttp(test) {
         params: {}
     };
 
-    client.post('/tasks?task=zfs_list_datasets', bodyObj, function (err, req, res, tasks) {
-        test.ifError(err);
-        if (!err) {
-            test.ok(res, 'got a response');
-            test.equal(res.statusCode, 200, 'POST /tasks returned 200');
-        }
-        test.done();
-    });
+    client.post(
+        '/tasks?task=zfs_list_datasets',
+        bodyObj,
+        function (err, req, res, tasks) {
+            test.ifError(err);
+            if (!err) {
+                test.ok(res, 'got a response');
+                test.equal(res.statusCode, 200, 'POST /tasks returned 200');
+            }
+            test.done();
+        });
 }
 
 function testExecuteNonTaskHttp(test) {
@@ -86,13 +89,16 @@ function testExecuteNonTaskHttp(test) {
         params: {}
     };
 
-    client.post('/tasks?task=this_is_not_a_task', bodyObj, function (err, req, res, tasks) {
-        if (err) {
-            test.ok(res, 'got a response');
-            test.equal(res.statusCode, 404, 'POST /tasks returned 404');
-        }
-        test.done();
-    });
+    client.post(
+        '/tasks?task=this_is_not_a_task',
+        bodyObj,
+        function (err, req, res, tasks) {
+            if (err) {
+                test.ok(res, 'got a response');
+                test.equal(res.statusCode, 404, 'POST /tasks returned 404');
+            }
+            test.done();
+        });
 }
 
 module.exports = {
