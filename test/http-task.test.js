@@ -55,6 +55,7 @@ function setup(cb) {
             agent: false,
             url: 'http://' + adminip + ':' + PROVISIONER_PORT
         });
+
         cb();
     });
 }
@@ -65,14 +66,31 @@ function teardown(cb) {
 
 function testExecuteTaskHttp(test) {
     test.expect(3);
-    var payload = {
-        task: 'nop',
+    var bodyObj = {
         params: {}
     };
-    client.post('/tasks', payload, function (err, req, res, tasks) {
+
+    client.post('/tasks?task=zfs_list_datasets', bodyObj, function (err, req, res, tasks) {
         test.ifError(err);
-        test.ok(res, 'got a response');
-        test.equal(res.statusCode, 200, 'GET /tasks returned success');
+        if (!err) {
+            test.ok(res, 'got a response');
+            test.equal(res.statusCode, 200, 'POST /tasks returned 200');
+        }
+        test.done();
+    });
+}
+
+function testExecuteNonTaskHttp(test) {
+    test.expect(2);
+    var bodyObj = {
+        params: {}
+    };
+
+    client.post('/tasks?task=this_is_not_a_task', bodyObj, function (err, req, res, tasks) {
+        if (err) {
+            test.ok(res, 'got a response');
+            test.equal(res.statusCode, 404, 'POST /tasks returned 404');
+        }
         test.done();
     });
 }
@@ -80,5 +98,6 @@ function testExecuteTaskHttp(test) {
 module.exports = {
     setUp: setup,
     tearDown: teardown,
-    'execute a task via http': testExecuteTaskHttp
+    'execute a task via http': testExecuteTaskHttp,
+    'execute a non-task via http': testExecuteNonTaskHttp
 };
