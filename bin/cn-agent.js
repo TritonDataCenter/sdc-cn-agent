@@ -9,6 +9,7 @@
  * Copyright (c) 2014, Joyent, Inc.
  */
 
+var util = require('util');
 var TaskAgent = require('../lib/task_agent/task_agent');
 var fs = require('fs');
 var path = require('path');
@@ -20,27 +21,70 @@ var exec = require('child_process').exec;
 var tty = require('tty');
 var once = require('once');
 var bunyan = require('bunyan');
-
+var AgentHttpServer = require('../lib/server');
 var App = require('../lib/app');
 
-var logname = 'cn-agent';
-var smartdcconfig = require('../lib/smartdc-config');
+main();
 
-var log = bunyan.createLogger({ name: logname });
+function main() {
+    var logname = 'cn-agent';
+    var smartdcconfig = require('../lib/smartdc-config');
 
-var options = {
-    log: log,
-    tasklogdir: '/var/log/' + logname + '/logs',
-    logname: logname,
-    tasksPath: path.join(__dirname, '..', 'lib/tasks')
-};
+    var log = bunyan.createLogger({ name: logname });
 
-// The plan is to migrate to using this file as the entire configuration
-// needed for the cn-agent. For now we rely on the presence of this file
-// to detect if we are intending to run the agent, which is why no_rabbit
-// is false by default
-var agentConfigPath = '/opt/smartdc/agents/etc/cn-agent.config.json';
-var agentConfig;
+
+    // The plan is to migrate to using this file as the entire configuration
+    // needed for the cn-agent. For now we rely on the presence of this file
+    // to detect if we are intending to run the agent, which is why no_rabbit
+    // is false by default
+    var agentConfigPath = '/opt/smartdc/agents/etc/cn-agent.config.json';
+    var agentConfig;
+
+    try {
+        agentConfig = JSON.parse(fs.readFileSync(agentConfigPath, 'utf-8'));
+    } catch (e) {
+        log.error(e, 'Could not parse agent config: "%s", '
+            + 'setting no_rabbit flag to false', e.message);
+        agentConfig = { no_rabbit: false };
+    }
+
+    if (agentConfig.no_rabbit) {
+        smartdcconfig.sysinfo(function (err, sysinfo) {
+            if (err) {
+                throw err;
+            }
+
+            var ip = firstAdminIp(sysinfo);
+
+            var agentServer = new AgentHttpServer({ bindip: ip, log: log });
+            agentServer.start();
+
+            var options = {
+                uuid: '564db572-fe64-d8d4-8c24-5e6e0177e1c5',
+                log: log,
+                tasklogdir: '/var/log/' + logname + '/logs',
+                logname: logname,
+                taskspath: path.join(__dirname, '..', 'lib/tasks'),
+                agentserver: agentServer
+            };
+
+            var app = new App(options);
+
+            // EXPERIMENTAL
+            if (agentConfig.fluentd_host) {
+                process.env.FLUENTD_HOST = agentConfig.fluentd_host;
+            }
+
+            app.start();
+        });
+
+    } else {
+        log.warn('"no_rabbit" flag is not true, cn-agent will now sleep');
+        // http://nodejs.org/docs/latest/api/all.html#all_settimeout_cb_ms
+        // ...The timeout must be in the range of 1-2,147,483,647 inclusive...
+        setInterval(function () {}, 2000000000);
+    }
+}
 
 function firstAdminIp(sysinfo) {
     var interfaces;
@@ -61,40 +105,4 @@ function firstAdminIp(sysinfo) {
     }
 
     throw new Error('No NICs with name "admin" detected.');
-}
-
-
-try {
-    agentConfig = JSON.parse(fs.readFileSync(agentConfigPath, 'utf-8'));
-} catch (e) {
-    log.error(e, 'Could not parse agent config: "%s", '
-        + 'setting no_rabbit flag to false', e.message);
-    agentConfig = { no_rabbit: false };
-}
-
-if (agentConfig.no_rabbit) {
-
-    smartdcconfig.sysinfo(function (err, sysinfo) {
-        if (err) {
-            throw err;
-        }
-
-        var ip = firstAdminIp(sysinfo);
-        options.bindIp = ip;
-
-        var app = new App(options);
-
-        // EXPERIMENTAL
-        if (agentConfig.fluentd_host) {
-            process.env.FLUENTD_HOST = agentConfig.fluentd_host;
-        }
-
-        app.start();
-    });
-
-} else {
-    log.warn('"no_rabbit" flag is not true, cn-agent will now sleep');
-    // http://nodejs.org/docs/latest/api/all.html#all_settimeout_cb_ms
-    // ...The timeout must be in the range of 1-2,147,483,647 inclusive...
-    setInterval(function () {}, 2000000000);
 }
