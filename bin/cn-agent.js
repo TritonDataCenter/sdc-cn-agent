@@ -60,7 +60,7 @@ function main() {
             agentServer.start();
 
             var options = {
-                uuid: '564db572-fe64-d8d4-8c24-5e6e0177e1c5',
+                uuid: sysinfo.UUID,
                 log: log,
                 tasklogdir: '/var/log/' + logname + '/logs',
                 logname: logname,
