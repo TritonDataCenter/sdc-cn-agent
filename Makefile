@@ -81,7 +81,7 @@ CLEAN_FILES += $(NODEUNIT) ./node_modules/tap
 
 .PHONY: test
 test:
-	$(NODEUNIT) test/*.test.js
+	./test/runtests
 
 .PHONY: release
 release: all deps docs $(SMF_MANIFESTS)
