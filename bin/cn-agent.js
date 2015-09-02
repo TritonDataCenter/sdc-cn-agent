@@ -56,7 +56,11 @@ function main() {
 
             var ip = firstAdminIp(sysinfo);
 
-            var agentServer = new AgentHttpServer({ bindip: ip, log: log });
+            var agentServer = new AgentHttpServer({
+                bindip: ip,
+                log: log,
+                uuid: sysinfo.UUID
+            });
             agentServer.start();
 
             var options = {
