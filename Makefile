@@ -83,6 +83,15 @@ CLEAN_FILES += $(NODEUNIT) ./node_modules/tap
 test:
 	./test/runtests
 
+.PHONY: test-coal
+COAL=root@10.99.99.7
+test-coal:
+	./tools/rsync-to coal
+	ssh $(COAL) 'cd /opt/smartdc/agents/lib/node_modules/cn-agent \
+	    && /usr/node/bin/node \
+	    /opt/smartdc/agents/lib/node_modules/cn-agent/node_modules/.bin/nodeunit \
+	    --reporter default'
+
 .PHONY: release
 release: all deps docs $(SMF_MANIFESTS)
 	@echo "Building $(RELEASE_TARBALL)"
