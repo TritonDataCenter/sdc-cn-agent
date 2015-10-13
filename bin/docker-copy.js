@@ -16,8 +16,10 @@ var SERVER_CLOSE_TIMEOUT = 5;
 process.on('message', function (message) {
     var opts = {
         req_id: message.req_id,
-        payload: message.payload,
+        path: message.path,
         uuid: message.uuid,
+        mode: message.mode,
+        no_overwrite_dir: message.no_overwrite_dir,
         timeoutSeconds: message.timeoutSeconds || SERVER_CLOSE_TIMEOUT
     };
 
