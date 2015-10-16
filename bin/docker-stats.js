@@ -243,9 +243,21 @@ function setupDockerStatsSocket(opts, callback) {
  * Stats helper functions.
  */
 
-function addNetworkStats(stats, name, data) {
+function addNetworkStats(stats, kst, data, opts) {
     if (!stats.network) {
-        stats.network = {
+        stats.network = {};
+    }
+
+    function niceNicName(name) {
+        var match = name.match(/^z\d+_(.*)$/);
+        if (match) {
+            return match[1];
+        }
+        return name;
+    }
+
+    function initNetInterface(obj, name) {
+        var nicStats = {
             'rx_bytes': 0,
             'rx_packets': 0,
             'rx_errors': 0,
@@ -255,9 +267,18 @@ function addNetworkStats(stats, name, data) {
             'tx_errors': 0,
             'tx_dropped': 0
         };
+        obj[name] = nicStats;
+        return nicStats;
     }
 
     var n = stats.network;
+    if (opts.clientApiVersion && opts.clientApiVersion >= 1.21) {
+        // Docker 1.9 changed to a per-nic stats object.
+        n = initNetInterface(stats.network, niceNicName(kst.name));
+    } else if (!n.hasOwnProperty('rx_bytes')) {
+        n = initNetInterface(stats, 'network');
+    }
+
     n.rx_bytes += data.rbytes;
     n.rx_packets += data.ipackets;
     n.rx_errors += data.ierrors;
@@ -431,7 +452,7 @@ function collectOneKstatRead(kst, opts) {
         className = kst[i]['class'];
         if (data && data.zonename === zoneUuid) {
             if (className === 'net') {
-                addNetworkStats(stats, kst[i].name, data);
+                addNetworkStats(stats, kst[i], data, opts);
             } else if (className === 'zone_memory_cap') {
                 addMemoryStats(stats, kst[i].name, data);
             } else if (className === 'zone_caps') {
@@ -454,6 +475,9 @@ function collectOneKstatRead(kst, opts) {
 function collectContainerStats(socket, opts) {
     assert.object(socket, 'socket');
     assert.object(opts.log, 'log');
+    assert.object(opts.payload, 'payload');
+    assert.optionalNumber(opts.payload.clientApiVersion,
+        'opts.payload.clientApiVersion');
     assert.bool(opts.doStream, 'doStream');
     assert.string(opts.uuid, 'uuid');
 
@@ -481,6 +505,7 @@ function collectContainerStats(socket, opts) {
         }
 
         collectOpts = {
+            clientApiVersion: opts.payload.clientApiVersion,
             lastStats: lastStats,
             log: log,
             zoneUuid: zoneUuid
@@ -533,6 +558,9 @@ function collectContainerStats(socket, opts) {
 //                }]
 //            }),
 //            doStream: true,
+//            payload: {
+//                clientApiVersion: 1.21
+//            },
 //            uuid: '00c49de0-c11c-4486-9162-05768ab49dcb'
 //        };
 //        collectContainerStats(process.stdout, opts);
