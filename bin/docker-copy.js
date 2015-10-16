@@ -19,6 +19,7 @@ process.on('message', function (message) {
         path: message.path,
         uuid: message.uuid,
         mode: message.mode,
+        admin_ip: message.admin_ip,
         no_overwrite_dir: message.no_overwrite_dir,
         timeoutSeconds: message.timeoutSeconds || SERVER_CLOSE_TIMEOUT
     };
