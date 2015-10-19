@@ -244,10 +244,6 @@ function setupDockerStatsSocket(opts, callback) {
  */
 
 function addNetworkStats(stats, kst, data, opts) {
-    if (!stats.network) {
-        stats.network = {};
-    }
-
     function niceNicName(name) {
         var match = name.match(/^z\d+_(.*)$/);
         if (match) {
@@ -274,7 +270,8 @@ function addNetworkStats(stats, kst, data, opts) {
     var n = stats.network;
     if (opts.clientApiVersion && opts.clientApiVersion >= 1.21) {
         // Docker 1.9 changed to a per-nic stats object.
-        n = initNetInterface(stats.network, niceNicName(kst.name));
+        stats.networks = {};
+        n = initNetInterface(stats.networks, niceNicName(kst.name));
     } else if (!n.hasOwnProperty('rx_bytes')) {
         n = initNetInterface(stats, 'network');
     }
