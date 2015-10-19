@@ -267,13 +267,15 @@ function addNetworkStats(stats, kst, data, opts) {
         return nicStats;
     }
 
-    var n = stats.network;
+    var n;
     if (opts.clientApiVersion && opts.clientApiVersion >= 1.21) {
         // Docker 1.9 changed to a per-nic stats object.
         stats.networks = {};
         n = initNetInterface(stats.networks, niceNicName(kst.name));
-    } else if (!n.hasOwnProperty('rx_bytes')) {
+    } else if (!stats.hasOwnProperty('network')) {
         n = initNetInterface(stats, 'network');
+    } else {
+        n = stats.network;
     }
 
     n.rx_bytes += data.rbytes;
