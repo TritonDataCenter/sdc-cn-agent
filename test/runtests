@@ -40,7 +40,7 @@ fi
 
 #---- config
 
-NAME=provisioner
+NAME=cn-agent
 TOP=$(cd $(dirname $0)/../; pwd)
 
 
@@ -87,7 +87,7 @@ do
     esac
 done
 
-OUTPUT_DIR=/var/tmp/${NAME}test
+OUTPUT_DIR=/var/tmp/${NAME}-test
 echo "# Create output dir ($OUTPUT_DIR)."
 rm -rf $OUTPUT_DIR
 mkdir -p $OUTPUT_DIR
@@ -100,7 +100,7 @@ export NODE_PATH=/usr/node_modules:/usr/vm/node_modules:/usr/img/node_modules
 
 cd $TOP
 
-test_files=$(ls -1 test/*.test.js)
+test_files=$(ls -1 test/unit/*.test.js)
 if [[ -n "$opt_test_pattern" ]]; then
     test_files=$(echo "$test_files" | grep "$opt_test_pattern" || true)
     echo "# Running filtered set of test files: $test_files"
