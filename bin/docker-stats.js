@@ -53,8 +53,8 @@
  *     "cpu_usage": {
  *         "total_usage": zone_caps.cpucaps_zone.usage,
  *         "percpu_usage": [zone_caps.cpucaps_zone.usage],
- *         "usage_in_kernelmode": zones.zone_misc.nsecs_sys,
- *         "usage_in_usermode": zones.zone_misc.nsecs_user
+ *         "usage_in_kernelmode": zones.zone_misc.nsec_sys,
+ *         "usage_in_usermode": zones.zone_misc.nsec_user
  *     },
  *     "throttling_data": {
  *         "throttled_time": zone_caps.cpucaps_zone.nwait
@@ -131,7 +131,8 @@ var kstat = require('kstat');
 var sprintf = require('sprintf').sprintf;
 
 var SERVER_CLOSE_TIMEOUT = 60 * 1000; // 1 minute
-var UPDATE_FREQUENCY = 1000; // every second - send a json stats object
+var UPDATE_FREQUENCY_MS = 1000; // every second - send a json stats object
+var UPDATE_FREQUENCY_NS = UPDATE_FREQUENCY_MS * 1000000; // nanoseconds
 
 // For debugging - when true, creates own logs file for all logging messages.
 var DO_OWN_LOGGING = false;
@@ -180,6 +181,9 @@ process.on('message', function (message) {
 function setupDockerStatsSocket(opts, callback) {
 
     var log = opts.log;
+    var adminIp;
+    var tcpServer;
+    var serverTimeout;
 
     log.debug('opts.payload: ', opts.payload);
 
@@ -187,19 +191,13 @@ function setupDockerStatsSocket(opts, callback) {
 
     var onListening = function stats_onListening() {
         var addr = tcpServer.address();
-        smartDcConfig.getFirstAdminIp(function (err, adminIp) {
-            if (err) {
-                callback(err);
-                return;
-            }
-            log.info('ending DockerStatsTask');
+        log.info('ending DockerStatsTask');
 
-            var hostAndPort = {
-                host: adminIp,
-                port: addr.port
-            };
-            callback(null, hostAndPort);
-        });
+        var hostAndPort = {
+            host: adminIp,
+            port: addr.port
+        };
+        callback(null, hostAndPort);
     };
 
     var onConnection = function stats_onConnection(socket) {
@@ -215,22 +213,29 @@ function setupDockerStatsSocket(opts, callback) {
 
     log.info('starting DockerStatsTask');
 
-    /**
-     * Create TCP Server which will output the stats stream.
-     */
-    var tcpServer = net.createServer();
+    smartDcConfig.getFirstAdminIp(function (err, ip) {
+        if (err) {
+            callback(err);
+            return;
+        }
+        adminIp = ip;
+        /**
+         * Create TCP Server which will output the stats stream.
+         */
+        tcpServer = net.createServer();
 
-    // Close server if no connections are received within timeout
-    var serverTimeout = setTimeout(function () {
-        log.warn('Closing stream tcpServer after ' +
-             SERVER_CLOSE_TIMEOUT + ' msec without connection');
-        tcpServer.close();
-    }, SERVER_CLOSE_TIMEOUT);
+        // Close server if no connections are received within timeout
+        serverTimeout = setTimeout(function () {
+            log.warn('Closing stream tcpServer after ' +
+                 SERVER_CLOSE_TIMEOUT + ' msec without connection');
+            tcpServer.close();
+        }, SERVER_CLOSE_TIMEOUT);
 
-    tcpServer.on('listening', onListening);
-    tcpServer.on('connection', onConnection);
+        tcpServer.on('listening', onListening);
+        tcpServer.on('connection', onConnection);
 
-    tcpServer.listen(0);
+        tcpServer.listen(0, adminIp);
+    });
 }
 
 
@@ -238,9 +243,17 @@ function setupDockerStatsSocket(opts, callback) {
  * Stats helper functions.
  */
 
-function addNetworkStats(stats, name, data) {
-    if (!stats.network) {
-        stats.network = {
+function addNetworkStats(stats, kst, data, opts) {
+    function niceNicName(name) {
+        var match = name.match(/^z\d+_(.*)$/);
+        if (match) {
+            return match[1];
+        }
+        return name;
+    }
+
+    function initNetInterface(obj, name) {
+        var nicStats = {
             'rx_bytes': 0,
             'rx_packets': 0,
             'rx_errors': 0,
@@ -250,9 +263,21 @@ function addNetworkStats(stats, name, data) {
             'tx_errors': 0,
             'tx_dropped': 0
         };
+        obj[name] = nicStats;
+        return nicStats;
     }
 
-    var n = stats.network;
+    var n;
+    if (opts.clientApiVersion && opts.clientApiVersion >= 1.21) {
+        // Docker 1.9 changed to a per-nic stats object.
+        stats.networks = {};
+        n = initNetInterface(stats.networks, niceNicName(kst.name));
+    } else if (!stats.hasOwnProperty('network')) {
+        n = initNetInterface(stats, 'network');
+    } else {
+        n = stats.network;
+    }
+
     n.rx_bytes += data.rbytes;
     n.rx_packets += data.ipackets;
     n.rx_errors += data.ierrors;
@@ -297,29 +322,40 @@ function addCpuStats(stats, name, data, opts) {
         };
     }
 
+    var cpu_stats = stats.cpu_stats;
+    var cpu_usage = cpu_stats.cpu_usage;
+    var last_cpu_stats = lastStats && lastStats.cpu_stats;
+    var last_cpu_usage = lastStats && last_cpu_stats.cpu_usage;
+
     if (name.substr(0, 13) === 'cpucaps_zone_') {
         // Docker is using incremental values for it's cpu numbers, so we need
         // to combine with the lastStats value. Kstats gives the cpu as a
         // percentage, so allot 100 (percent) to the system_cpu_usage each call.
-        if (lastStats) {
-            stats.cpu_stats.cpu_usage.total_usage =
-                lastStats.cpu_stats.cpu_usage.total_usage + data.usage;
-            stats.cpu_stats.system_cpu_usage =
-                lastStats.cpu_stats.system_cpu_usage + 100;
-        } else {
-            stats.cpu_stats.cpu_usage.total_usage = data.usage;
-            stats.cpu_stats.system_cpu_usage = 100;
-        }
-
+        cpu_usage.total_usage = (lastStats
+                                      ? last_cpu_usage.total_usage
+                                      : 0) + data.usage;
+        cpu_stats.system_cpu_usage = (lastStats
+                                      ? last_cpu_stats.system_cpu_usage
+                                      : 0) + 100;
         // Always just one CPU?
-        stats.cpu_stats.cpu_usage.percpu_usage =
-            [stats.cpu_stats.cpu_usage.total_usage];
+        cpu_usage.percpu_usage = [cpu_usage.total_usage];
+        cpu_stats.throttling_data.throttled_time = data.nwait;
 
-        stats.cpu_stats.throttling_data.throttled_time = data.nwait;
-
-    } else if (name.substr(0, 9) === 'zone_misc') {
-        stats.cpu_stats.cpu_usage.usage_in_usermode = data.nsecs_user;
-        stats.cpu_stats.cpu_usage.usage_in_kernelmode = data.nsecs_sys;
+    } else if (name === 'zone_misc') {
+        cpu_usage.usage_in_usermode = data.nsec_user;
+        cpu_usage.usage_in_kernelmode = data.nsec_sys;
+        if (cpu_usage.total_usage === 0) {
+            // DOCKER-577: Haven't seen a cpucaps_zone_ class, create totals
+            // from zone_misc.
+            cpu_usage.total_usage = data.nsec_user
+                                    + data.nsec_sys
+                                    + data.nsec_waitrq;
+            cpu_stats.system_cpu_usage = (lastStats
+                                          ? last_cpu_stats.system_cpu_usage
+                                          : 0) + UPDATE_FREQUENCY_NS;
+            // Always just one CPU?
+            cpu_usage.percpu_usage = [cpu_usage.total_usage];
+        }
     }
 }
 
@@ -414,9 +450,8 @@ function collectOneKstatRead(kst, opts) {
         data = kst[i].data;
         className = kst[i]['class'];
         if (data && data.zonename === zoneUuid) {
-            console.log(kst[i].name + ', ' + kst[i]['class'] + ', ', data);
             if (className === 'net') {
-                addNetworkStats(stats, kst[i].name, data);
+                addNetworkStats(stats, kst[i], data, opts);
             } else if (className === 'zone_memory_cap') {
                 addMemoryStats(stats, kst[i].name, data);
             } else if (className === 'zone_caps') {
@@ -439,6 +474,9 @@ function collectOneKstatRead(kst, opts) {
 function collectContainerStats(socket, opts) {
     assert.object(socket, 'socket');
     assert.object(opts.log, 'log');
+    assert.object(opts.payload, 'payload');
+    assert.optionalNumber(opts.payload.clientApiVersion,
+        'opts.payload.clientApiVersion');
     assert.bool(opts.doStream, 'doStream');
     assert.string(opts.uuid, 'uuid');
 
@@ -466,6 +504,7 @@ function collectContainerStats(socket, opts) {
         }
 
         collectOpts = {
+            clientApiVersion: opts.payload.clientApiVersion,
             lastStats: lastStats,
             log: log,
             zoneUuid: zoneUuid
@@ -485,7 +524,7 @@ function collectContainerStats(socket, opts) {
 
         lastStats = stats;
 
-        collectorTimeout = setTimeout(collectStats, UPDATE_FREQUENCY);
+        collectorTimeout = setTimeout(collectStats, UPDATE_FREQUENCY_MS);
     }
 
     // Socket error handler - close and return.
@@ -504,3 +543,25 @@ function collectContainerStats(socket, opts) {
 
     collectStats();
 }
+
+
+// Simple command line helper to ensure stats are working.
+// if (require.main === module) {
+//    (function () {
+//        var opts = {
+//            log: bunyan.createLogger({
+//                name: 'docker-stats',
+//                streams: [{
+//                    stream: process.stderr,
+//                    level: 'error'
+//                }]
+//            }),
+//            doStream: true,
+//            payload: {
+//                clientApiVersion: 1.21
+//            },
+//            uuid: '00c49de0-c11c-4486-9162-05768ab49dcb'
+//        };
+//        collectContainerStats(process.stdout, opts);
+//    })();
+// }
