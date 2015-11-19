@@ -24,7 +24,7 @@
     "trace-event": "git+ssh://git@github.com:joyent/node-trace-event.git#9f7d00b8c3594def9ef534f68c16c215c3dba9f2",
     "tracker": "git+ssh://git@github.com:joyent/node-tracker.git#3a139906c9eb8d8684ac54cf54cd010315856042",
     "verror": "1.6.0",
-    "vmadm": "git+ssh://git@github.com:joyent/node-vmadm.git#0d0ae6b39704ebf5873e8cdba112d4cb874cf5c3",
+    "vmadm": "git+ssh://git@github.com:joyent/node-vmadm.git#cd73ad50c8b432cf361beb37af80bf91af93f5d6",
     "zfs": "git+ssh://git@github.com:joyent/node-zfs.git#657a90d9424c45066e3e0919dfe9b34f5636e0e9"
   },
   "sdcDependencies": {
