@@ -7,3 +7,6 @@
 [submodule "deps/jsstyle"]
 	path = deps/jsstyle
 	url = git://github.com/davepacheco/jsstyle.git
+[submodule "deps/zfs_snapshot_tar"]
+	path = deps/zfs_snapshot_tar
+	url = git://github.com/joyent/zfs_snapshot_tar.git
