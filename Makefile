@@ -55,6 +55,7 @@ RELEASE_TARBALL :=	$(NAME)-$(STAMP).tgz
 RELEASE_MANIFEST :=	$(NAME)-$(STAMP).manifest
 RELSTAGEDIR :=		/tmp/$(STAMP)
 NODEUNIT =		$(TOP)/node_modules/.bin/nodeunit
+ZFS_SNAPSHOT_TAR :=	$(TOP)/deps/zfs_snapshot_tar/zfs_snapshot_tar
 
 #
 # Due to the unfortunate nature of npm, the Node Package Manager, there appears
@@ -71,11 +72,23 @@ RUN_NPM_INSTALL =	$(NPM_ENV) $(NPM) install
 # Repo-specific targets
 #
 .PHONY: all
-all: $(SMF_MANIFESTS) | $(NPM_EXEC) $(REPO_DEPS)
+all: $(SMF_MANIFESTS) | $(NPM_EXEC) $(REPO_DEPS) $(ZFS_SNAPSHOT_TAR)
 	$(RUN_NPM_INSTALL)
 
 $(NODEUNIT): | $(NPM_EXEC)
 	$(RUN_NPM_INSTALL)
+
+#
+# Unfortunately we don't have the CTF tools available during this build.  We
+# stub out their execution below, but also prevent stripping the binary.
+# Shipped binaries will, at least, contain DWARF.
+#
+$(ZFS_SNAPSHOT_TAR): deps/zfs_snapshot_tar/.git
+	cd $(@D) && $(MAKE) \
+	    CTFCONVERT=/bin/true \
+	    CTFMERGE=/bin/true \
+	    STRIP=/bin/true \
+	    $(@F)
 
 CLEAN_FILES += $(NODEUNIT) ./node_modules/tap
 
@@ -112,6 +125,8 @@ release: all deps docs $(SMF_MANIFESTS)
 	    $(TOP)/test \
 	    $(TOP)/tools \
 	    $(RELSTAGEDIR)/$(NAME)
+	cp $(ZFS_SNAPSHOT_TAR) \
+	    $(RELSTAGEDIR)/$(NAME)/lib/zfs_snapshot_tar
 	# Trim node
 	rm -rf \
 	    $(RELSTAGEDIR)/$(NAME)/node/bin/npm \
@@ -149,6 +164,9 @@ dumpvar:
 	    exit 1; \
 	fi
 	@echo "$(VAR) is '$($(VAR))'"
+
+clean::
+	-cd deps/zfs_snapshot_tar && $(MAKE) clobber
 
 include ./tools/mk/Makefile.deps
 include ./tools/mk/Makefile.node_prebuilt.targ
