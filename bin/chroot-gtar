@@ -36,7 +36,7 @@ function onexit
 
 function usage
 {
-    echo "usage: ${SCRIPT_NAME} -r CHROOTDIR -C GTARDIR -t TARBALL [-z COMPRESION] [-m TARMETHOD]" >&2
+    echo "usage: ${SCRIPT_NAME} -r CHROOTDIR -C GTARDIR -t TARBALL [-z COMPRESION] [-m TARMETHOD] [-- gtar args]" >&2
     echo "" >&2
     echo "'CHROOTDIR' is the base dir of the chroot. 'GTARDIR' is a path" >&2
     echo "relative to CHROOTDIR that is passed to gtar as '-C GTARDIR'." >&2
@@ -50,7 +50,7 @@ function usage
     echo "Optional 'TARMETHOD' of 'create' or 'extract' - defaults to 'extract'." >&2
     echo "" >&2
     echo "example:" >&2
-    echo "    ./${SCRIPT_NAME} -r /zones/foo -C extracted -t /var/archive.tar.xz -z xz -x" >&2
+    echo "    ./${SCRIPT_NAME} -r /zones/foo -C extracted -t /var/archive.tar.xz -z xz -- /this/file" >&2
 }
 
 
@@ -109,7 +109,6 @@ done
 
 # Anything left over is passed to gtar as is.
 shift $((OPTIND-1))
-GTAR_EXTRA_OPTS=$@
 
 if [[ -z "$CHROOTDIR" ]] || [[ -z "$GTARDIR" ]] || [[ -z "$TARBALL" ]]; then
     usage
@@ -166,4 +165,4 @@ mount -F fd fd $CHROOTDIR/dev/fd
 
 # Run chroot gtar command.
 TRACE=$TRACE LC_ALL=C PATH=/$CHROOTBIN:$PATH /usr/sbin/chroot $CHROOTDIR \
-    /$CHROOTBIN/gtar -C "$GTARDIR" -${TARMETHOD}${UNCOMPRESSOPT}f "$TARBALL" $GTAR_EXTRA_OPTS
+    /$CHROOTBIN/gtar -C "$GTARDIR" -${TARMETHOD}${UNCOMPRESSOPT}f "$TARBALL" "$@"
