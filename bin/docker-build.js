@@ -25,12 +25,12 @@ var bunyan = require('bunyan');
 var digestStream = require('digest-stream');
 var dockerbuild = require('sdc-docker-build');
 var IMGAPI = require('sdc-clients').IMGAPI;
-var LineStream = require('lstream');
 var mkdirp = require('mkdirp');
 var rimraf = require('rimraf');
 var sprintf = require('sprintf').sprintf;
 var zfs = require('/usr/node/node_modules/zfs.js').zfs;
 
+var LineStream = require('../lib/linestream');
 var smartDcConfig = require('../lib/task_agent/smartdc-config');
 
 
