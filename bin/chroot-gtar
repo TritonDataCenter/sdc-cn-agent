@@ -71,6 +71,7 @@ while getopts ":hr:C:t:z:m:" opt; do
     m)
         case $OPTARG in
             extract)
+                TARMETHOD=x
                 ;;
             create)
                 TARMETHOD=c
@@ -115,7 +116,7 @@ if [[ -z "$CHROOTDIR" ]] || [[ -z "$GTARDIR" ]] || [[ -z "$TARBALL" ]]; then
     exit 1
 fi
 
-if [[ ! -f "$CHROOTDIR/$TARBALL" ]]; then
+if [[ $TARBALL != "-" && ! -f "$CHROOTDIR/$TARBALL" ]]; then
     fatal "TARBALL does not exist: $CHROOTDIR/$TARBALL"
     exit 1
 fi
@@ -127,13 +128,13 @@ TO_UMOUNT=
 TO_REMOVE=
 CHROOTBIN=chroot-bin-$$
 BINDIR=$CHROOTDIR/$CHROOTBIN
-LIBDIR=$CHROOTDIR/lib
+LIBREL=lib
+LIBDIR=$BINDIR/$LIBREL
 TO_REMOVE="$TO_REMOVE $BINDIR $LIBDIR"
 
 if [[ -e $LIBDIR ]]; then
     fatal "conflict: $LIBDIR exists"
 fi
-mkdir -p $LIBDIR
 
 # Copy commands (and their library dependencies) into the chroot.
 rm -rf $BINDIR
@@ -165,4 +166,4 @@ mount -F fd fd $CHROOTDIR/dev/fd
 
 # Run chroot gtar command.
 TRACE=$TRACE LC_ALL=C PATH=/$CHROOTBIN:$PATH /usr/sbin/chroot $CHROOTDIR \
-    /$CHROOTBIN/gtar -C "$GTARDIR" -${TARMETHOD}${UNCOMPRESSOPT}f "$TARBALL" "$@"
+    $CHROOTBIN/$LIBREL/ld.so.1 -e LD_LIBRARY_PATH=$CHROOTBIN/$LIBREL $CHROOTBIN/gtar -C "$GTARDIR" -${TARMETHOD}${UNCOMPRESSOPT}f "$TARBALL" "$@"
