@@ -28,6 +28,9 @@ function onexit
             [[ -e "$path" ]] && umount $path
         done
         for path in $TO_REMOVE; do
+            # Symlink removal
+            [[ -L "$path" ]] && rm $path
+            # Regular file/directory removal.
             [[ -e "$path" ]] && rm -rf $path
         done
     fi
@@ -125,12 +128,14 @@ fi
 trap 'onexit $?' EXIT
 
 TO_UMOUNT=
-TO_REMOVE=
 CHROOTBIN=chroot-bin-$$
 BINDIR=$CHROOTDIR/$CHROOTBIN
 LIBREL=lib
 LIBDIR=$BINDIR/$LIBREL
-TO_REMOVE="$TO_REMOVE $BINDIR $LIBDIR"
+# Create symlink to provide the /usr/lib directory inside the chroot.
+# This is needed for gtar's gunzip/bunzip/xz compression support.
+ln -s /$CHROOTBIN $CHROOTDIR/usr
+TO_REMOVE="$BINDIR $LIBDIR $CHROOTDIR/usr"
 
 if [[ -e $LIBDIR ]]; then
     fatal "conflict: $LIBDIR exists"
