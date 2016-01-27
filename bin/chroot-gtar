@@ -60,6 +60,7 @@ function usage
 
 #---- mainline
 
+COMPRESSION=
 CHROOTDIR=
 GTARDIR=
 TARBALL=
@@ -90,11 +91,15 @@ while getopts ":hr:C:t:z:m:" opt; do
         TARBALL=$OPTARG
         ;;
     z)
+        COMPRESSION=$OPTARG
         case $OPTARG in
             xz)
                 UNCOMPRESSOPT=J
                 ;;
-            none|gzip|bzip2)
+            gzip|bzip2)
+                ;;
+            none)
+                COMPRESSION=
                 ;;
             *)
                 fatal "unknown compression: $OPTARG"
@@ -132,10 +137,17 @@ CHROOTBIN=chroot-bin-$$
 BINDIR=$CHROOTDIR/$CHROOTBIN
 LIBREL=lib
 LIBDIR=$BINDIR/$LIBREL
+TO_REMOVE="$BINDIR $LIBDIR"
+
 # Create symlink to provide the /usr/lib directory inside the chroot.
-# This is needed for gtar's gunzip/bunzip/xz compression support.
-ln -s /$CHROOTBIN $CHROOTDIR/usr
-TO_REMOVE="$BINDIR $LIBDIR $CHROOTDIR/usr"
+# This is only needed for gtar's gunzip/bunzip/xz compression support.
+if [[ -n "$COMPRESSION" ]]; then
+    USR_SYMLINK="/$CHROOTDIR/usr"
+    if [[ ! -L $USR_SYMLINK ]]; then
+        ln -s /$CHROOTBIN $USR_SYMLINK
+        TO_REMOVE="$TO_REMOVE $USR_SYMLINK"
+    fi
+fi
 
 if [[ -e $LIBDIR ]]; then
     fatal "conflict: $LIBDIR exists"
