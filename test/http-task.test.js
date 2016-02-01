@@ -101,9 +101,97 @@ function testExecuteNonTaskHttp(test) {
         });
 }
 
+function testPauseTaskHandlerHttp(test) {
+    test.expect(3);
+    client.post('/pause', {}, function (err, req, res) {
+        test.ifError(err);
+        if (!err) {
+            test.ok(res, 'Got /pause response');
+            test.equal(res.statusCode, 204, 'POST /pause returned 204');
+        }
+        test.done();
+    });
+}
+
+function testCannotRunTaskPaused(test) {
+    test.expect(2);
+    var bodyObj = {
+        params: {}
+    };
+
+    client.post(
+        '/tasks?task=nop',
+        bodyObj,
+        function (err, req, res, tasks) {
+            if (err) {
+                test.ok(res, 'got a response');
+                test.equal(res.statusCode, 503,
+                        'POST /tasks paused returned 503');
+            }
+            test.done();
+        });
+}
+
+function testResumeTaskHandlerHttp(test) {
+    test.expect(3);
+    client.post('/resume', {}, function (err, req, res) {
+        test.ifError(err);
+        if (!err) {
+            test.ok(res, 'Got /resume response');
+            test.equal(res.statusCode, 204, 'POST /resume returned 204');
+        }
+        test.done();
+    });
+}
+
+
+function testCanRunTaskAfterResume(test) {
+    test.expect(3);
+    var bodyObj = {
+        params: {}
+    };
+
+    client.post(
+        '/tasks?task=nop',
+        bodyObj,
+        function (err, req, res, tasks) {
+            test.ifError(err);
+            if (!err) {
+                test.ok(res, 'got a response');
+                test.equal(res.statusCode, 200, 'POST /tasks returned 200');
+            }
+            test.done();
+        });
+}
+
+
+function testTasksHistory(test) {
+    test.expect(6);
+
+    client.get(
+        '/history',
+        function (err, req, res, history) {
+            test.ifError(err);
+            if (!err) {
+                test.ok(res, 'got a response');
+                test.equal(res.statusCode, 200, 'GET /tasks returned 200');
+                test.ok(Array.isArray(history), 'Tasks history is an array');
+                test.ok(history.length, 'Tasks history contains tasks');
+                test.ok(history[0].status, 'Tasks has status property');
+            }
+            test.done();
+        });
+}
+
+
 module.exports = {
     setUp: setup,
     tearDown: teardown,
     'execute a task via http': testExecuteTaskHttp,
-    'execute a non-task via http': testExecuteNonTaskHttp
+    'execute a non-task via http': testExecuteNonTaskHttp,
+    'pause task handler via http': testPauseTaskHandlerHttp,
+    'cannot execute task paused': testCannotRunTaskPaused,
+    'resume task handler via http': testResumeTaskHandlerHttp,
+    'can execute task after resume': testCanRunTaskAfterResume,
+    'tasks history': testTasksHistory
 };
