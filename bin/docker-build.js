@@ -845,9 +845,10 @@ function importImageSnapshotsIntoImgapi(builder, opts, callback) {
                     if (deleteErr) {
                         log.warn('Unable to delete image %s', image_uuid);
                     }
+                    // Ignoring deleteErr for first (and more important) err.
                     cb(err);
                 };
-                IMGAPI.deleteImage(image_uuid, opts.payload.account_uuid,
+                imgapi.deleteImage(image_uuid, opts.payload.account_uuid,
                     deleteImageCb);
                 return;
             }
