@@ -490,6 +490,13 @@ function removeTroublesomeEtcFiles(builder, callback) {
     var log = builder.log;
     var stat;
 
+    var lastCmd = builder.layers.slice(-1)[0].cmd;
+    if (!lastCmd || ['ADD', 'COPY'].indexOf(lastCmd.name) === -1) {
+        // Removal is not needed for other commands.
+        callback();
+        return;
+    }
+
     // First, check if there's an '/etc/' directory.
     // Note: `containerRealpath` will ensure we don't leave the
     // zone's root dir.
@@ -516,6 +523,10 @@ function removeTroublesomeEtcFiles(builder, callback) {
         }
 
         try {
+            if (stat.isFile()) {
+                // A regular file is okay - it will be overwritten as needed.
+                continue;
+            }
             if (stat.isDirectory()) {
                 log.debug('Removing troublesome container dir %s', fpath);
                 rimraf.sync(fpath);
