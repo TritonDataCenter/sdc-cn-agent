@@ -535,6 +535,7 @@ function removeTroublesomeEtcFiles(builder, callback) {
                 fs.unlinkSync(fpath);
             }
         } catch (e) {
+            log.error('Error removing ' + fpath, e);
             callback(new Error(sprintf('Error removing etc path %s',
                 filename)));
             return;
@@ -799,7 +800,7 @@ function importImageSnapshotsIntoImgapi(builder, opts, callback) {
                     snapshot: snapshotName,
                     zoneUuid: builder.zoneUuid
                 };
-                zfsSnapshotStream(snapOpts, function zStrmCb(err, stream, on) {
+                zfsSnapshotStream(snapOpts, function zStrmCb(err, stream) {
                     imageOrigStream = stream;
                     next(err);
                 }, onZfsProcessError);
@@ -828,7 +829,13 @@ function importImageSnapshotsIntoImgapi(builder, opts, callback) {
                     req_id: opts.req_id
                 };
                 imgapiAddFile(addOpts, function _imgAddZfsCb(err, img) {
-                    image = img;
+                    if (err) {
+                        log.error('imgapiAddFile error, image uuid %s - err %s',
+                            imageSdcDocker.image_uuid, err);
+                    } else {
+                        log.debug('imgapi.addImageFile was successful');
+                        image = img;
+                    }
                     next(err);
                 });
             },
@@ -850,14 +857,16 @@ function importImageSnapshotsIntoImgapi(builder, opts, callback) {
            }
         ], function importCleanup(err) {
             if (err) {
+                log.error('Error importing images into IMGAPI', err);
                 // Remove this image if it failed to import/validate.
                 var image_uuid = imageSdcDocker.image_uuid;
                 var deleteImageCb = function _deleteImageCb(deleteErr) {
                     if (deleteErr) {
                         log.warn('Unable to delete image %s', image_uuid);
                     }
-                    // Ignoring deleteErr for first (and more important) err.
-                    cb(err);
+                    // Ignore the deleteErr here, and then preferring the
+                    // zfsProcessError over the general err when available.
+                    cb(zfsProcessError || err);
                 };
                 imgapi.deleteImage(image_uuid, opts.payload.account_uuid,
                     deleteImageCb);
@@ -920,8 +929,10 @@ function zfsSnapshotStream(opts, callback, onProcessError) {
     assert.func(onProcessError, 'onProcessError');
 
     var log = opts.log;
+    var onProcessErrorCalled = false;
     var parent_snapshot = opts.parent_snapshot;
     var snapshot = opts.snapshot;
+    var stderr = '';
     var zoneUuid = opts.zoneUuid;
 
     var zfsBase = sprintf('zones/%s', zoneUuid);
@@ -944,7 +955,35 @@ function zfsSnapshotStream(opts, callback, onProcessError) {
         return;
     }
 
-    zfsProc.on('error', onProcessError);
+    zfsProc.on('error', function _zfsProcOnError(err) {
+        log.debug('zfs_snapshot_tar generated error %s', err);
+        if (onProcessErrorCalled) {
+            return;
+        }
+        onProcessErrorCalled = true;
+        onProcessError(err);
+    });
+    zfsProc.on('exit', function _zfsProcOnExit(code, signal) {
+        log.debug('zfs_snapshot_tar exited with code: %d', code);
+        if (code !== null && code !== 0) {
+            log.error('zfs_snapshot_tar failed - stderr: %s', stderr);
+            if (onProcessErrorCalled) {
+                return;
+            }
+            onProcessErrorCalled = true;
+            onProcessError(new Error(sprintf('zfs_snapshot_tar exited with '
+                + 'code: %d', code)));
+            return;
+        }
+    });
+    zfsProc.stderr.on('readable', function _zfsProcOnReadable() {
+        var chunk;
+        while ((chunk = this.read()) != null) {
+            log.debug('zfs_snapshot_tar generated %d bytes stderr',
+                chunk.length);
+            stderr += String(chunk);
+        }
+    });
 
     callback(null, zfsProc.stdout);
 }
