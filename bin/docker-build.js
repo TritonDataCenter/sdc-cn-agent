@@ -331,6 +331,7 @@ function buildFromContext(opts, callback) {
         containerRootDir: path.join('/zones', opts.uuid, 'root'),
         contextFilepath: opts.contextFilepath,
         dockerfile: opts.payload.dockerfile,
+        suppressSuccessMsg: true,  // Stop the 'Build successful: ' message.
         existingImages: opts.payload.allDockerImages,
         log: opts.log,
         nocache: opts.payload.nocache,
