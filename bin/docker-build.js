@@ -757,6 +757,8 @@ function importImageSnapshotsIntoImgapi(builder, opts, callback) {
         }
 
         log.debug('Creating image for build layer %d %j', idx, dockerImage);
+        builder.emitStdout(util.format('Importing image %s into '
+            + 'IMGAPI\n', idx, builder.getShortId(dockerImage.id)));
 
         async.waterfall([
             function doGetZfsSnapshotSize(next) {
