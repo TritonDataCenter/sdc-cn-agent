@@ -49,6 +49,7 @@ process.on('message', function (message) {
     assert.object(message, 'message');
     assert.object(message.payload, 'payload');
     assert.string(message.payload.account_uuid, 'payload.account_uuid');
+    assert.string(message.payload.command, 'payload.command');
     assert.string(message.payload.imgapi_url, 'payload.imgapi_url');
     assert.optionalArrayOfObject(message.payload.allDockerImages,
         'payload.allDockerImages');
@@ -56,8 +57,11 @@ process.on('message', function (message) {
     assert.string(message.uuid, 'uuid');
     assert.optionalNumber(message.timeoutSeconds, 'timeoutSeconds');
 
-    // Setup log streams.
     var commandType = message.payload.command;  // Either 'build' or 'commit'
+    assert.ok(commandType === 'build' || commandType === 'commit',
+        'Unknown command type: ' + commandType);
+
+    // Setup log streams.
     var logStreams = [];
     var logfile = sprintf('%s/%s-%s-docker_%s_child.log', process.env.logdir,
         (new Date()).getTime().toString(), process.pid, commandType);
@@ -509,6 +513,7 @@ function cleanup(builder, callback) {
  */
 function commitImage(opts, callback) {
     assert.object(opts.payload, 'opts.payload');
+    assert.arrayOfString(opts.payload.changes, 'opts.payload.changes');
     assert.object(opts.payload.fromImage, 'opts.payload.fromImage');
     assert.string(opts.payload.fromImageUuid, 'opts.payload.fromImageUuid');
 
@@ -1043,12 +1048,12 @@ function importImageSnapshotsIntoImgapi(builder, opts, callback) {
            }
         ], function importCleanup(err) {
             if (err) {
-                log.error('Unable to import image into imgapi: %s', err);
-                // Remove this image if it failed to import/validate.
                 if (!imageSdcDocker) {
+                    log.error('Unable to import image into imgapi: %s', err);
                     cb(err);
                     return;
                 }
+                // Remove this image as it failed to import/validate.
                 var image_uuid = imageSdcDocker.image_uuid;
                 log.error('Unable to import image %s into imgapi: %s',
                     image_uuid, err);
@@ -1139,8 +1144,14 @@ function zfsSnapshotStream(opts, callback, onProcessError) {
         '-x', 'var/log/sdc-dockerinit.log'    // Exclude sdc docker log file
     ];
     if (opts.commandType === 'commit') {
+        // For commit, the parent_snapshot is in a different zfs dataset to
+        // snapshotFullname, so we have to use the special '-e' argument to
+        // zfs_snapshot_tar and provide the full snapshot names.
         args = args.concat(['-e', parent_snapshot, snapshotFullname]);
     } else {
+        // For build, both snapshot names are from the same dataset, so we pass
+        // the dataset name (zfsBase) and the short (or full) snapshot name to
+        // zfs_snapshot_tar.
         args = args.concat([zfsBase, parent_snapshot, snapshot]);
     }
 
