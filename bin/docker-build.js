@@ -49,6 +49,7 @@ process.on('message', function (message) {
     assert.object(message, 'message');
     assert.object(message.payload, 'payload');
     assert.string(message.payload.account_uuid, 'payload.account_uuid');
+    assert.string(message.payload.command, 'payload.command');
     assert.string(message.payload.imgapi_url, 'payload.imgapi_url');
     assert.optionalArrayOfObject(message.payload.allDockerImages,
         'payload.allDockerImages');
@@ -56,10 +57,14 @@ process.on('message', function (message) {
     assert.string(message.uuid, 'uuid');
     assert.optionalNumber(message.timeoutSeconds, 'timeoutSeconds');
 
+    var commandType = message.payload.command;  // Either 'build' or 'commit'
+    assert.ok(commandType === 'build' || commandType === 'commit',
+        'Unknown command type: ' + commandType);
+
     // Setup log streams.
     var logStreams = [];
-    var logfile = sprintf('%s/%s-%s-%s_child.log', process.env.logdir,
-        (new Date()).getTime().toString(), process.pid, process.env.task);
+    var logfile = sprintf('%s/%s-%s-docker_%s_child.log', process.env.logdir,
+        (new Date()).getTime().toString(), process.pid, commandType);
     logStreams.push({path: logfile, level: 'debug'});
     // Keep last N log messages around - useful for debugging.
     var ringbuffer = new bunyan.RingBuffer({ limit: 100 });
@@ -69,7 +74,7 @@ process.on('message', function (message) {
         stream: ringbuffer
     });
     // Create the logger.
-    var log = bunyan.createLogger({name: 'docker-build',
+    var log = bunyan.createLogger({name: 'docker-' + commandType,
                                     streams: logStreams,
                                     req_id: message.req_id});
     // Store an easy accessor to the ring buffer.
@@ -106,7 +111,14 @@ process.on('message', function (message) {
  */
 function setupDockerBuildSocket(opts, callback) {
     var log = opts.log;
+    var commandType = opts.payload.command;  // Either 'build' or 'commit'
     var connectCount = 0;
+
+    if (commandType === 'commit') {
+        // Commit does not send a build context.
+        connectCount = 1;
+        opts.contextDownloadFinished = true;
+    }
 
     log.debug('opts.payload: %s', util.inspect(opts.payload, {depth: 10}));
 
@@ -236,8 +248,10 @@ function runBuild(opts) {
     assert.object(opts, 'opts');
     assert.object(opts.buildSocket, 'opts.buildSocket');
     assert.object(opts.log, 'opts.log');
+    assert.object(opts.payload, 'opts.payload');
     assert.string(opts.uuid, 'opts.uuid');
 
+    var commandType = opts.payload.command;  // Either 'build' or 'commit'
     var log = opts.log;
     var socket = opts.buildSocket;
 
@@ -257,13 +271,20 @@ function runBuild(opts) {
     };
     process.on('uncaughtException', uncaughtExceptionHandler);
 
-    log.info('build - started for zone', opts.uuid);
+    log.info('%s - started for zone %s', commandType, opts.uuid);
 
-    sendMessage('Starting build', {socket: socket, log: log});
+    sendMessage('Starting ' + commandType, {socket: socket, log: log});
 
-    // Do build.
-    buildFromContext(opts, function buildDone(err) {
-        log.info('build finished, err:', err);
+    if (commandType === 'commit') {
+        // Do docker commit.
+        commitImage(opts, onDone);
+    } else {
+        // Do docker build.
+        buildFromContext(opts, onDone);
+    }
+
+    function onDone(err) {
+        log.info('%s finished, err: %s', commandType, err);
         var event = {
             type: 'end'
         };
@@ -274,7 +295,7 @@ function runBuild(opts) {
             log.debug('runBuild: sent end event - calling socket.destroy');
             socket.destroy();
         });
-    });
+    }
 }
 
 
@@ -328,6 +349,7 @@ function buildFromContext(opts, callback) {
 
     var buildOpts = {
         buildargs: opts.payload.buildargs,
+        commandType: 'build',
         containerRootDir: path.join('/zones', opts.uuid, 'root'),
         contextFilepath: opts.contextFilepath,
         dockerfile: opts.payload.dockerfile,
@@ -453,25 +475,184 @@ function buildFromContext(opts, callback) {
 
 
 /**
+ * Remove the given snapshots.
+ */
+function destroySnapshots(snaps, builder, callback) {
+    // Delete snapshots and temporary files.
+    if (snaps.length === 0) {
+        callback();
+        return;
+    }
+    var snapNames = snaps.map(function (s) { return s.name; }).join(',');
+    var zfsSnaps = sprintf('zones/%s@%s', builder.zoneUuid, snapNames);
+    builder.log.debug('Destroying snapshots %j', zfsSnaps);
+    zfs.destroy(zfsSnaps, callback);
+}
+
+
+/**
  * Cleanup directories, files and other data created during the build process.
  */
 function cleanup(builder, callback) {
-    rimraf(builder.contextDir, function _rimrafContextDirCb(err) {
-        if (err) {
+    var allSnaps = gSnapshotsToDelete.concat(gSnapshots);
+    destroySnapshots(allSnaps, builder, function _destroySnapsCb(err) {
+        if (err || builder.commandType === 'commit') {
             callback(err);
             return;
         }
-        // Delete snapshots and temporary files.
-        var allSnaps = gSnapshotsToDelete.concat(gSnapshots);
-        if (allSnaps.length === 0) {
-            callback();
+
+        rimraf(builder.contextDir, callback);
+    });
+}
+
+
+/**
+ * Create sdc-docker-build Builder instance and manage the image create process.
+ *
+ * Communicates (relay) between sdc-docker and the image Builder.
+ */
+function commitImage(opts, callback) {
+    assert.object(opts.payload, 'opts.payload');
+    assert.arrayOfString(opts.payload.changes, 'opts.payload.changes');
+    assert.object(opts.payload.fromImage, 'opts.payload.fromImage');
+    assert.string(opts.payload.fromImageUuid, 'opts.payload.fromImageUuid');
+
+    var changes = opts.payload.changes;
+    var fromImage = opts.payload.fromImage;
+    var fromImageUuid = opts.payload.fromImageUuid;
+    var log = opts.log;
+    var pendingCallbackEvents = {};
+    var socket = opts.buildSocket;
+
+    socket.on('end', function () {
+        log.debug('commitImage: socket.end received');
+    });
+
+    // Handle events from sdc-docker - usually this will be an answer (callback)
+    // to a request the build system has made.
+    var commitEventStream = new LineStream();
+    socket.pipe(commitEventStream);
+    commitEventStream.on('line', function (event) {
+        log.debug('client event received: %j', event);
+        var id;
+        var cbEvent;
+        try {
+            event = JSON.parse(event);
+        } catch (e) {
+            log.error('Build: invalid json: %s - ignoring', event);
             return;
         }
-        var snapNames = allSnaps.map(function (s) { return s.name; }).join(',');
-        var zfsSnaps = sprintf('zones/%s@%s', builder.zoneUuid, snapNames);
-        builder.log.debug('Destroying snapshots %j', zfsSnaps);
-        zfs.destroy(zfsSnaps, callback);
+        switch (event.type) {
+            case 'callback':
+                id = event.messageId;
+                cbEvent = pendingCallbackEvents[id];
+                assert.object(cbEvent, 'cbEvent with messageId ' + id);
+                delete pendingCallbackEvents[id];
+                if (event.error) {
+                    cbEvent.callback(new Error(event.error));
+                } else {
+                    cbEvent.callback(null, event.result);
+                }
+                break;
+            default:
+                log.error('Unhandled socket event - ignoring: %j', event);
+                break;
+        }
     });
+
+    var buildOpts = {
+        commandType: 'commit',
+        containerRootDir: path.join('/zones', opts.uuid, 'root'),
+        contextFilepath: '<none for docker commit>',  // XXX: Fake context.
+        log: opts.log,
+        nocache: true,
+        uuid: opts.uuid,
+        workDir: path.join('/zones', opts.uuid, 'config')
+    };
+    var builder = new dockerbuild.Builder(buildOpts);
+
+    // Add the base image as the first snapshot.
+    var fullSnapshotName = sprintf('zones/%s@final', fromImageUuid);
+    log.debug('Base image snapshot is %j', fullSnapshotName);
+    gSnapshots.push({
+        name: fullSnapshotName,
+        layerIdx: 0
+    });
+
+    builder.on('message', function (event) {
+        switch (event.type) {
+            case 'message':
+            case 'stdout':
+                sendEvent(event, {socket: socket, log: log});
+                break;
+            default:
+                log.error('Unhandled builder event - ignoring: %j', event);
+                break;
+        }
+    });
+
+    builder.on('task', function (event) {
+        switch (event.type) {
+            case 'image_create':
+                sendEvent(event, {socket: socket, log: log});
+                break;
+            case 'commit_finished':
+                sendEvent(event, {socket: socket, log: log});
+                break;
+            default:
+                log.error('Unhandled commit task - ignoring: %j', event);
+                if (event.callback) {
+                    event.callback(new Error('Unhandled build task: '
+                                            + event.type));
+                    return;
+                }
+                break;
+        }
+
+        if (event.callback) {
+            pendingCallbackEvents[event.messageId] = event;
+        }
+    });
+
+    builder.on('end', function (err) {
+        async.waterfall([
+            function checkBuildError(cb) {
+                cb(err);
+            },
+            function snapshot(cb) {
+                createZfsSnapshot(builder, cb);
+            },
+            // Update image metadata with user provided arguments.
+            function updateFinalImage(cb) {
+                var img = builder.layers.slice(-1)[0].image;
+                if (opts.payload.author) {
+                    img.author = opts.payload.author;
+                }
+                if (opts.payload.comment) {
+                    img.comment = opts.payload.comment;
+                }
+                cb();
+            },
+            function importImages(cb) {
+                importImageSnapshotsIntoImgapi(builder, opts, cb);
+            },
+            function notifySuccess(next) {
+                log.debug('notifySuccess');
+                var event = {
+                    callback: next,
+                    finalId: builder.layers.slice(-1)[0].image.id,
+                    type: 'commit_finished'
+                };
+                builder.emitTask(event);
+            }
+        ], function endAsyncCb(builderr) {
+            cleanup(builder, function _cleanupCb(cleanuperr) {
+                callback(builderr || cleanuperr);
+            });
+        });
+    });
+
+    builder.startCommit(fromImage, changes || []);
 }
 
 
@@ -685,32 +866,38 @@ function createZfsSnapshot(builder, callback) {
     assert.func(callback, 'callback');
 
     // Remove special files before we create the snapshot.
-    removeTroublesomeEtcFiles(builder, function _troublesomeCb(tsErr) {
-        if (tsErr) {
-            callback(tsErr);
-            return;
-        }
-
-        // Take a snapshot and add the name to the list of snapshots taken.
-        gSnapshotId += 1;
-        var log = builder.log;
-        var snapshotName = sprintf('buildlayer%d', gSnapshotId);
-        var zfsName = sprintf('zones/%s@%s', builder.zoneUuid, snapshotName);
-        log.debug('Creating zfs snapshot %j', zfsName);
-
-        zfs.snapshot(zfsName, function zfsSnapshotCb(err, stderr) {
-            if (err) {
-                log.error('snapshot error: %s, stderr: %s', err, stderr);
-                callback(err);
+    async.waterfall([
+        function removeTroubleFiles(next) {
+            // Don't remove any files for a docker commit operation.
+            if (builder.commandType === 'commit') {
+                next();
                 return;
             }
-            gSnapshots.push({
-                name: snapshotName,
-                layerIdx: builder.layers.length - 1
+            removeTroublesomeEtcFiles(builder, next);
+        },
+        function takeSnapshot(next) {
+            // Take a snapshot and add the name to the list of snapshots taken.
+            gSnapshotId += 1;
+            var log = builder.log;
+            var snapshotName = sprintf('buildlayer%d', gSnapshotId);
+            var zfsName = sprintf('zones/%s@%s', builder.zoneUuid,
+                snapshotName);
+            log.debug('Creating zfs snapshot %j', zfsName);
+
+            zfs.snapshot(zfsName, function zfsSnapshotCb(err, stderr) {
+                if (err) {
+                    log.error('snapshot error: %s, stderr: %s', err, stderr);
+                    next(err);
+                    return;
+                }
+                gSnapshots.push({
+                    name: snapshotName,
+                    layerIdx: builder.layers.length - 1
+                });
+                next();
             });
-            callback();
-        });
-    });
+        }
+    ], callback);
 }
 
 
@@ -720,7 +907,6 @@ function createZfsSnapshot(builder, callback) {
 function importImageSnapshotsIntoImgapi(builder, opts, callback) {
     assert.object(builder, 'builder');
     assert.object(opts, 'opts');
-    assert.object(opts.contextSocket, 'opts.contextSocket');
     assert.object(opts.payload, 'opts.payload');
     assert.string(opts.req_id, 'opts.req_id');
     assert.func(callback, 'callback');
@@ -757,8 +943,10 @@ function importImageSnapshotsIntoImgapi(builder, opts, callback) {
         }
 
         log.debug('Creating image for build layer %d %j', idx, dockerImage);
-        builder.emitStdout(util.format('Importing image %s into '
-            + 'IMGAPI\n', builder.getShortId(dockerImage.id)));
+        if (builder.commandType !== 'commit') {
+            builder.emitStdout(util.format('Importing image %s into '
+                + 'IMGAPI\n', builder.getShortId(dockerImage.id)));
+        }
 
         async.waterfall([
             function doGetZfsSnapshotSize(next) {
@@ -798,6 +986,7 @@ function importImageSnapshotsIntoImgapi(builder, opts, callback) {
             },
             function doZfsSnapshotTarStream(next) {
                 var snapOpts = {
+                    commandType: builder.commandType,
                     log: log,
                     parent_snapshot: gSnapshots[idx - 1].name,
                     snapshot: snapshotName,
@@ -824,7 +1013,6 @@ function importImageSnapshotsIntoImgapi(builder, opts, callback) {
             function doImgapiImportFromZfsTar(next) {
                 var addOpts = {
                     account_uuid: opts.payload.account_uuid,
-                    contextSocket: opts.contextSocket,
                     imgapi: imgapi,
                     imageFile: imageStream,
                     image_uuid: imageSdcDocker.image_uuid,
@@ -860,9 +1048,16 @@ function importImageSnapshotsIntoImgapi(builder, opts, callback) {
            }
         ], function importCleanup(err) {
             if (err) {
-                log.error('Error importing images into IMGAPI', err);
-                // Remove this image if it failed to import/validate.
+                if (!imageSdcDocker) {
+                    log.error('Unable to import image into imgapi: %s', err);
+                    cb(err);
+                    return;
+                }
+                // Remove this image as it failed to import/validate.
                 var image_uuid = imageSdcDocker.image_uuid;
+                log.error('Unable to import image %s into imgapi: %s',
+                    image_uuid, err);
+                // Remove this image if it failed to import/validate.
                 var deleteImageCb = function _deleteImageCb(deleteErr) {
                     if (deleteErr) {
                         log.warn('Unable to delete image %s', image_uuid);
@@ -924,6 +1119,7 @@ function zfsGetSnapshotSizes(opts, callback) {
  */
 function zfsSnapshotStream(opts, callback, onProcessError) {
     assert.object(opts, 'opts');
+    assert.string(opts.commandType, 'opts.commandType');
     assert.object(opts.log, 'opts.log');
     assert.string(opts.parent_snapshot, 'opts.parent_snapshot');
     assert.string(opts.snapshot, 'opts.snapshot');
@@ -938,15 +1134,26 @@ function zfsSnapshotStream(opts, callback, onProcessError) {
     var stderr = '';
     var zoneUuid = opts.zoneUuid;
 
+    var snapshotFullname = util.format('zones/%s@%s', zoneUuid, snapshot);
     var zfsBase = sprintf('zones/%s', zoneUuid);
     var args = [
         '-r', 'root',                         // Include zone root directory
         '-x', 'native',                       // Exclude anything in /native/
         '-x', 'checkpoints',                  // Exclude snapshot /checkpoints/
         '-x', 'var/svc/provision_success',    // Exclude vm provisioning file
-        '-x', 'var/log/sdc-dockerinit.log',   // Exclude sdc docker log file
-        zfsBase, parent_snapshot, snapshot
+        '-x', 'var/log/sdc-dockerinit.log'    // Exclude sdc docker log file
     ];
+    if (opts.commandType === 'commit') {
+        // For commit, the parent_snapshot is in a different zfs dataset to
+        // snapshotFullname, so we have to use the special '-e' argument to
+        // zfs_snapshot_tar and provide the full snapshot names.
+        args = args.concat(['-e', parent_snapshot, snapshotFullname]);
+    } else {
+        // For build, both snapshot names are from the same dataset, so we pass
+        // the dataset name (zfsBase) and the short (or full) snapshot name to
+        // zfs_snapshot_tar.
+        args = args.concat([zfsBase, parent_snapshot, snapshot]);
+    }
 
     log.debug({cmd: gSnapshotTarExe, args: args}, 'Creating image tar stream');
 
@@ -968,6 +1175,9 @@ function zfsSnapshotStream(opts, callback, onProcessError) {
     });
     zfsProc.on('exit', function _zfsProcOnExit(code, signal) {
         log.debug('zfs_snapshot_tar exited with code: %d', code);
+        if (stderr) {
+            log.debug('zfs_snapshot_tar stderr: %s', stderr);
+        }
         if (code !== null && code !== 0) {
             log.error('zfs_snapshot_tar failed - stderr: %s', stderr);
             if (onProcessErrorCalled) {
