@@ -5,13 +5,13 @@
  */
 
 /*
- * Copyright (c) 2015, Joyent, Inc.
+ * Copyright (c) 2016, Joyent, Inc.
  */
 
 var net = require('net');
 var dockerstdio = require('../lib/docker-stdio');
 
-var SERVER_CLOSE_TIMEOUT = 5;
+var SERVER_CLOSE_TIMEOUT = 30;
 
 process.on('message', function (message) {
     var opts = {
