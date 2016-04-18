@@ -9,6 +9,7 @@ cscope.in.out
 cscope.po.out
 cscope.out
 /smf/manifests/*.xml
+/src/nomknod/*.so
 *.vim
 cn-agent-*.tgz
 cn-agent-*.manifest

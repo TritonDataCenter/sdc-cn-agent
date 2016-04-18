@@ -165,6 +165,8 @@ done
 
 mkdir -p $LIBDIR
 libs="/lib/ld.so.1
+    /opt/smartdc/agents/lib/node_modules/cn-agent/lib/nomknod.32.so
+    /opt/smartdc/agents/lib/node_modules/cn-agent/lib/nomknod.64.so
     $(for cmd in $CMDS; do ldd "$(which $cmd)"; done \
         | awk '{print $3}' | sort | uniq)
     "
@@ -183,4 +185,8 @@ mount -F fd fd $CHROOTDIR/dev/fd
 
 # Run chroot gtar command.
 TRACE=$TRACE LC_ALL=C PATH=/$CHROOTBIN:$PATH /usr/sbin/chroot $CHROOTDIR \
-    $CHROOTBIN/$LIBREL/ld.so.1 -e LD_LIBRARY_PATH=$CHROOTBIN/$LIBREL $CHROOTBIN/gtar -C "$GTARDIR" -${TARMETHOD}${UNCOMPRESSOPT}f "$TARBALL" "$@"
+    $CHROOTBIN/$LIBREL/ld.so.1 \
+    -e LD_PRELOAD_32=$CHROOTBIN/$LIBREL/nomknod.32.so \
+    -e LD_PRELOAD_64=$CHROOTBIN/$LIBREL/nomknod.64.so \
+    -e LD_LIBRARY_PATH=$CHROOTBIN/$LIBREL \
+    $CHROOTBIN/gtar -C "$GTARDIR" -${TARMETHOD}${UNCOMPRESSOPT}f "$TARBALL" "$@"

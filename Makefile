@@ -56,6 +56,8 @@ RELEASE_MANIFEST :=	$(NAME)-$(STAMP).manifest
 RELSTAGEDIR :=		/tmp/$(STAMP)
 NODEUNIT =		$(TOP)/node_modules/.bin/nodeunit
 ZFS_SNAPSHOT_TAR :=	$(TOP)/deps/zfs_snapshot_tar/zfs_snapshot_tar
+NOMKNOD :=	$(TOP)/src/nomknod/nomknod.32.so \
+	$(TOP)/src/nomknod/nomknod.64.so
 
 #
 # Due to the unfortunate nature of npm, the Node Package Manager, there appears
@@ -72,7 +74,7 @@ RUN_NPM_INSTALL =	$(NPM_ENV) $(NPM) install
 # Repo-specific targets
 #
 .PHONY: all
-all: $(SMF_MANIFESTS) | $(NPM_EXEC) $(REPO_DEPS) $(ZFS_SNAPSHOT_TAR)
+all: $(SMF_MANIFESTS) | $(NPM_EXEC) $(REPO_DEPS) $(ZFS_SNAPSHOT_TAR) $(NOMKNOD)
 	$(RUN_NPM_INSTALL)
 
 $(NODEUNIT): | $(NPM_EXEC)
@@ -90,7 +92,10 @@ $(ZFS_SNAPSHOT_TAR): deps/zfs_snapshot_tar/.git
 	    STRIP=/bin/true \
 	    $(@F)
 
-CLEAN_FILES += $(NODEUNIT) ./node_modules/tap
+$(NOMKNOD): src/nomknod/nomknod.c src/nomknod/Makefile
+	cd $(@D) && $(MAKE)
+
+CLEAN_FILES += $(NODEUNIT) ./node_modules/tap $(NOMKNOD)
 
 .PHONY: test
 test:
@@ -127,6 +132,8 @@ release: all deps docs $(SMF_MANIFESTS)
 	    $(RELSTAGEDIR)/$(NAME)
 	cp $(ZFS_SNAPSHOT_TAR) \
 	    $(RELSTAGEDIR)/$(NAME)/lib/zfs_snapshot_tar
+	cp $(NOMKNOD) \
+	    $(RELSTAGEDIR)/$(NAME)/lib/
 	# Trim node
 	rm -rf \
 	    $(RELSTAGEDIR)/$(NAME)/node/bin/npm \
