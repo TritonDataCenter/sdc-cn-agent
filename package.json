@@ -24,7 +24,7 @@
     "restify": "4.0.0",
     "rimraf": "2.4.3",
     "sdc-clients": "~9.1",
-    "sdc-docker-build": "git+ssh://git@github.com:joyent/sdc-docker-build.git#960ea678f02eeab50d7d56b2c044a998363d011e",
+    "sdc-docker-build": "git+ssh://git@github.com:joyent/sdc-docker-build.git#f26f6de19a3860ddb8f7f57848903cf25cc34b8d",
     "semver": "2.2.1",
     "shell-escape": "^0.2.0",
     "sprintf": "0.1.1",
