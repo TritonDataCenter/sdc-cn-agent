@@ -32,7 +32,7 @@
     "tracker": "git+ssh://git@github.com:joyent/node-tracker.git#3a139906c9eb8d8684ac54cf54cd010315856042",
     "vasync": "^1.6.3",
     "verror": "1.6.0",
-    "vmadm": "git+ssh://git@github.com:joyent/node-vmadm.git#3af2f7f5a1908c7ead7f68e4b5191f8b2e76fa25",
+    "vmadm": "git+ssh://git@github.com:joyent/node-vmadm.git#94e95c6b96c2c5947281a5ea3df763928a65219c",
     "zfs": "git+ssh://git@github.com:joyent/node-zfs.git#657a90d9424c45066e3e0919dfe9b34f5636e0e9"
   },
   "sdcDependencies": {
