@@ -1186,7 +1186,7 @@ function zfsSnapshotStream(opts, callback, onProcessError) {
             }
             onProcessErrorCalled = true;
             onProcessError(new Error(sprintf('zfs_snapshot_tar exited with '
-                + 'code: %d', code)));
+                + 'code: %d (%s)', code, stderr.substr(0, 1024))));
             return;
         }
     });
