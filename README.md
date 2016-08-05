@@ -10,12 +10,10 @@
 
 # sdc-cn-agent
 
-This repository is part of the Joyent SmartDataCenter project (SDC).  For
-contribution guidelines, issues, and general documentation, visit the main
-[SDC](http://github.com/joyent/sdc) project page.
-
-
-# Overview
+This repository is part of the Joyent Triton project. See the [contribution
+guidelines](https://github.com/joyent/triton/blob/master/CONTRIBUTING.md) --
+*Triton does not use GitHub PRs* -- and general documentation at the main
+[Triton project](https://github.com/joyent/triton) page.
 
 sdc-cn-agent is an RPC mechanism via which a client can interact with a
 compute node. It acts as an externally visible interface to subsystems within
