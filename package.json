@@ -1,7 +1,7 @@
 {
   "name": "cn-agent",
-  "description": "SmartDataCenter Compute Node Agent",
-  "version": "1.5.2",
+  "description": "Triton Compute Node Agent",
+  "version": "1.5.3",
   "author": "Joyent (joyent.com)",
   "private": true,
   "dependencies": {
