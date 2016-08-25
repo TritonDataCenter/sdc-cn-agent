@@ -37,7 +37,6 @@ JSSTYLE_FLAGS =		-o indent=4,doxygen,unparenthesized-return=0
 # doesn't know about (@@ENABLED@@)
 # SMF_MANIFESTS_IN = smf/manifests/cn-agent.xml.in
 
-# Should be the same version as the platform's /usr/node/bin/node.
 NODE_PREBUILT_VERSION =	v0.10.26
 NODE_PREBUILT_TAG =	gz
 ifeq ($(shell uname -s),SunOS)
@@ -58,6 +57,8 @@ NODEUNIT =		$(TOP)/node_modules/.bin/nodeunit
 ZFS_SNAPSHOT_TAR :=	$(TOP)/deps/zfs_snapshot_tar/zfs_snapshot_tar
 NOMKNOD :=	$(TOP)/src/nomknod/nomknod.32.so \
 	$(TOP)/src/nomknod/nomknod.64.so
+
+COAL ?= root@10.99.99.7
 
 #
 # Due to the unfortunate nature of npm, the Node Package Manager, there appears
@@ -102,7 +103,6 @@ test:
 	./test/runtests
 
 .PHONY: test-coal
-COAL=root@10.99.99.7
 test-coal:
 	./tools/rsync-to coal
 	ssh $(COAL) 'cd /opt/smartdc/agents/lib/node_modules/cn-agent \

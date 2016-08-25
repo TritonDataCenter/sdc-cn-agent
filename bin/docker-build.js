@@ -28,7 +28,7 @@ var IMGAPI = require('sdc-clients').IMGAPI;
 var mkdirp = require('mkdirp');
 var rimraf = require('rimraf');
 var sprintf = require('sprintf').sprintf;
-var zfs = require('/usr/node/node_modules/zfs.js').zfs;
+var zfs = require('zfs').zfs;
 
 var LineStream = require('../lib/linestream');
 var smartDcConfig = require('../lib/task_agent/smartdc-config');
