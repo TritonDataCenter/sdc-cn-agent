@@ -273,6 +273,17 @@ function runBuild(opts) {
 
     log.info('%s - started for zone %s', commandType, opts.uuid);
 
+    // Before we start, we want all files created by docker build/commit to use
+    // 'root:root' permissions. Note that the cn-agent (parent) process defaults
+    // to using 'root:staff' permissions.
+    // We do this so that we can avoid having to 'chown' files that get added by
+    // the ADD/COPY instructions (that way we don't need to keep track of what
+    // was copied and we avoid the performance of calling chown).
+    // Note that this should not be needed if we change the tar extraction to
+    // run inside of the zone - DOCKER-872.
+    process.setuid(0);
+    process.setgid(0);
+
     sendMessage('Starting ' + commandType, {socket: socket, log: log});
 
     if (commandType === 'commit') {
@@ -745,7 +756,7 @@ function handleExtractTarfileEvent(builder, event) {
     var tarfile = event.tarfile;
 
     // Ensure the holding (parent) directory exists.
-    builder.mkdirpChown(extractDir, function (err) {
+    mkdirp(extractDir, function (err) {
         if (err) {
             callback(err);
             return;
