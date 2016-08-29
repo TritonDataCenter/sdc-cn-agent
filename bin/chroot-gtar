@@ -175,10 +175,8 @@ for lib in $libs; do
 done
 
 # Setup minimum fake filesystem.
-TO_UMOUNT="$TO_UMOUNT $CHROOTDIR/proc $CHROOTDIR/dev/fd"
-TO_REMOVE="$TO_REMOVE $CHROOTDIR/proc $CHROOTDIR/dev/fd"
-mkdir -p $CHROOTDIR/proc
-mount -F proc proc $CHROOTDIR/proc
+TO_UMOUNT="$TO_UMOUNT $CHROOTDIR/dev/fd"
+TO_REMOVE="$TO_REMOVE $CHROOTDIR/dev/fd"
 [[ ! -e $CHROOTDIR/dev ]] && TO_REMOVE="$TO_REMOVE $CHROOTDIR/dev"
 mkdir -p $CHROOTDIR/dev/fd
 mount -F fd fd $CHROOTDIR/dev/fd
