@@ -43,6 +43,7 @@
   },
   "scripts": {
     "test": "./test.sh",
+    "preinstall": "npm/preinstall.sh",
     "postinstall": "./npm/postinstall.sh",
     "postuninstall": "./npm/postuninstall.sh"
   },
