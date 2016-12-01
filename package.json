@@ -14,7 +14,7 @@
     "effluent-logger": "git+https://github.com/joshwilsdon/effluent-logger.git#d662f161a07f94045ad2afb45442931511c40e51",
     "kstat": "1.0.0",
     "lazy-property": "1.0.0",
-    "libuuid": "0.1.4",
+    "libuuid": "0.2.1",
     "lockfd": "git+https://github.com/joyent/node-lockfd.git#eeec5216dd493b44a870d0369872f56ab0788d0f",
     "mkdirp": "^0.3.4",
     "nodeunit": "0.9.1",
