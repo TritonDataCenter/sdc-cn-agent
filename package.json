@@ -15,7 +15,7 @@
     "kstat": "1.0.0",
     "lazy-property": "1.0.0",
     "libuuid": "0.2.1",
-    "lockfd": "git+https://github.com/joyent/node-lockfd.git#fb830e09605e402e541e7d17c79e0cd1530ee14e",
+    "lockfd": "1.2.0",
     "mkdirp": "^0.3.4",
     "nodeunit": "0.9.1",
     "once": "1.3.0",
