@@ -106,7 +106,7 @@ test:
 test-coal:
 	./tools/rsync-to coal
 	ssh $(COAL) 'cd /opt/smartdc/agents/lib/node_modules/cn-agent \
-	    && /usr/node/bin/node \
+	    && /opt/smartdc/agents/lib/node_modules/cn-agent/node/bin/node \
 	    /opt/smartdc/agents/lib/node_modules/cn-agent/node_modules/.bin/nodeunit \
 	    --reporter default'
 
