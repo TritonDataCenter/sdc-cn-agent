@@ -5,7 +5,7 @@
 #
 
 #
-# Copyright 2015 Joyent, Inc.
+# Copyright 2016 Joyent, Inc.
 #
 
 #
@@ -37,10 +37,10 @@ JSSTYLE_FLAGS =		-o indent=4,doxygen,unparenthesized-return=0
 # doesn't know about (@@ENABLED@@)
 # SMF_MANIFESTS_IN = smf/manifests/cn-agent.xml.in
 
-NODE_PREBUILT_VERSION =	v0.10.26
+NODE_PREBUILT_VERSION =	v4.6.1
 NODE_PREBUILT_TAG =	gz
 ifeq ($(shell uname -s),SunOS)
-NODE_PREBUILT_IMAGE =	fd2cc906-8938-11e3-beab-4359c665ac99
+NODE_PREBUILT_IMAGE =	18b094b0-eb01-11e5-80c1-175dac7ddf02
 endif
 
 # Included definitions
@@ -106,7 +106,7 @@ test:
 test-coal:
 	./tools/rsync-to coal
 	ssh $(COAL) 'cd /opt/smartdc/agents/lib/node_modules/cn-agent \
-	    && /usr/node/bin/node \
+	    && /opt/smartdc/agents/lib/node_modules/cn-agent/node/bin/node \
 	    /opt/smartdc/agents/lib/node_modules/cn-agent/node_modules/.bin/nodeunit \
 	    --reporter default'
 
