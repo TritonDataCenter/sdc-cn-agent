@@ -30,7 +30,7 @@ var rimraf = require('rimraf');
 var sprintf = require('sprintf').sprintf;
 var zfs = require('zfs').zfs;
 
-var LineStream = require('../lib/linestream');
+var LineStream = require('lstream');
 var smartDcConfig = require('../lib/task_agent/smartdc-config');
 
 
@@ -330,31 +330,37 @@ function buildFromContext(opts, callback) {
     // to a request the build system has made.
     var buildEventStream = new LineStream();
     socket.pipe(buildEventStream);
-    buildEventStream.on('line', function (event) {
-        log.debug('client event received: %j', event);
-        var id;
-        var cbEvent;
-        try {
-            event = JSON.parse(event);
-        } catch (e) {
-            log.error('Build: invalid json: %s - ignoring', event);
-            return;
-        }
-        switch (event.type) {
-            case 'callback':
-                id = event.messageId;
-                cbEvent = pendingCallbackEvents[id];
-                assert.object(cbEvent, 'cbEvent with messageId ' + id);
-                delete pendingCallbackEvents[id];
-                if (event.error) {
-                    cbEvent.callback(new Error(event.error));
-                } else {
-                    cbEvent.callback(null, event.result);
-                }
-                break;
-            default:
-                log.error('Unhandled socket event - ignoring: %j', event);
-                break;
+
+    buildEventStream.on('readable', function buildFromContextOnReadable() {
+        var line;
+
+        while ((line = buildEventStream.read()) != null) {
+            log.debug('client event received: %j', line);
+            var id;
+            var cbEvent;
+            var event;
+            try {
+                event = JSON.parse(line);
+            } catch (e) {
+                log.error('Build: invalid json: %s - ignoring', line);
+                continue;
+            }
+            switch (event.type) {
+                case 'callback':
+                    id = event.messageId;
+                    cbEvent = pendingCallbackEvents[id];
+                    assert.object(cbEvent, 'cbEvent with messageId ' + id);
+                    delete pendingCallbackEvents[id];
+                    if (event.error) {
+                        cbEvent.callback(new Error(event.error));
+                    } else {
+                        cbEvent.callback(null, event.result);
+                    }
+                    break;
+                default:
+                    log.error('Unhandled socket event - ignoring: %j', event);
+                    break;
+            }
         }
     });
 
@@ -544,31 +550,37 @@ function commitImage(opts, callback) {
     // to a request the build system has made.
     var commitEventStream = new LineStream();
     socket.pipe(commitEventStream);
-    commitEventStream.on('line', function (event) {
-        log.debug('client event received: %j', event);
-        var id;
-        var cbEvent;
-        try {
-            event = JSON.parse(event);
-        } catch (e) {
-            log.error('Build: invalid json: %s - ignoring', event);
-            return;
-        }
-        switch (event.type) {
-            case 'callback':
-                id = event.messageId;
-                cbEvent = pendingCallbackEvents[id];
-                assert.object(cbEvent, 'cbEvent with messageId ' + id);
-                delete pendingCallbackEvents[id];
-                if (event.error) {
-                    cbEvent.callback(new Error(event.error));
-                } else {
-                    cbEvent.callback(null, event.result);
-                }
-                break;
-            default:
-                log.error('Unhandled socket event - ignoring: %j', event);
-                break;
+
+    commitEventStream.on('readable', function commitImageOnReadable() {
+        var line;
+
+        while ((line = commitEventStream.read()) != null) {
+            log.debug('client event received: %j', line);
+            var id;
+            var cbEvent;
+            var event;
+            try {
+                event = JSON.parse(line);
+            } catch (e) {
+                log.error('Build: invalid json: %s - ignoring', line);
+                continue;
+            }
+            switch (event.type) {
+                case 'callback':
+                    id = event.messageId;
+                    cbEvent = pendingCallbackEvents[id];
+                    assert.object(cbEvent, 'cbEvent with messageId ' + id);
+                    delete pendingCallbackEvents[id];
+                    if (event.error) {
+                        cbEvent.callback(new Error(event.error));
+                    } else {
+                        cbEvent.callback(null, event.result);
+                    }
+                    break;
+                default:
+                    log.error('Unhandled socket event - ignoring: %j', event);
+                    break;
+            }
         }
     });
 
