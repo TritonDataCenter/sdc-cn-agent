@@ -203,6 +203,14 @@ function sendMessage(message, opts, callback) {
 }
 
 
+/**
+ * Remove joyent specific labels that we don't want inside the built image.
+ */
+function sanitizeLabels(labels) {
+    delete labels['com.joyent.package'];
+}
+
+
 function downloadContext(opts) {
     var log = opts.log;
     var socket = opts.contextSocket;
@@ -364,13 +372,18 @@ function buildFromContext(opts, callback) {
         }
     });
 
+    // Sanitize labels.
+    var labels = JSON.parse(opts.payload.labels || '{}');
+    sanitizeLabels(labels);
+    labels = JSON.stringify(labels);
+
     var buildOpts = {
         buildargs: opts.payload.buildargs,
         commandType: 'build',
         containerRootDir: path.join('/zones', opts.uuid, 'root'),
         contextFilepath: opts.contextFilepath,
         dockerfile: opts.payload.dockerfile,
-        labels: opts.payload.labels,
+        labels: labels,
         suppressSuccessMsg: true,  // Stop the 'Build successful: ' message.
         existingImages: opts.payload.allDockerImages,
         log: opts.log,
@@ -654,6 +667,13 @@ function commitImage(opts, callback) {
                 }
                 if (opts.payload.comment) {
                     img.comment = opts.payload.comment;
+                }
+                // Sanitize labels.
+                if (img.config && img.config.Labels) {
+                    sanitizeLabels(img.config.Labels);
+                }
+                if (img.container_config && img.container_config.Labels) {
+                    sanitizeLabels(img.container_config.Labels);
                 }
                 cb();
             },
