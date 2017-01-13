@@ -13,6 +13,7 @@ var path = require('path');
 
 var assert = require('assert-plus');
 var bunyan = require('bunyan');
+var tritonTracer = require('triton-tracer');
 var vasync = require('vasync');
 var verror = require('verror');
 
@@ -47,6 +48,11 @@ function loadBackend(opts) {
     if (backendName === 'dummy' && process.env.CN_AGENT_SERVER_UUID) {
         opts.serverUuid = process.env.CN_AGENT_SERVER_UUID;
     }
+
+    // Setup tracing before we do any work
+    tritonTracer.init({
+        log: opts.log
+    });
 
     // This will throw if backend doesn't exist
     Backend = require(path.join(BACKEND_DIR, backendName));
@@ -169,11 +175,6 @@ function main() {
         };
 
         app = new App(options);
-
-        // EXPERIMENTAL
-        if (agentConfig.fluentd_host) {
-            process.env.FLUENTD_HOST = agentConfig.fluentd_host;
-        }
 
         app.start();
 
