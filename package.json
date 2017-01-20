@@ -26,7 +26,6 @@
     "sdc-clients": "10.0.3",
     "sdc-docker-build": "git+https://github.com/joyent/sdc-docker-build.git#af8bd3e",
     "semver": "2.2.1",
-    "shell-escape": "^0.2.0",
     "sprintf": "0.1.5",
     "trace-event": "git+https://github.com/joyent/node-trace-event.git#9f7d00b8c3594def9ef534f68c16c215c3dba9f2",
     "tracker": "git+https://github.com/joyent/node-tracker.git#3a139906c9eb8d8684ac54cf54cd010315856042",
