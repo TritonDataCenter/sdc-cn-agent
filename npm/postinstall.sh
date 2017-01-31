@@ -69,6 +69,7 @@ function subfile
         ;;
     setup)
         file_enabled='true'
+        file_port='0'
         ;;
     *)
         fatal 'Unknown agent type: "%s".' "${agent_type}"
