@@ -67,6 +67,9 @@ function subfile
         file_port='5310'
         file_enabled='false'
         ;;
+    setup)
+        file_enabled='true'
+        ;;
     *)
         fatal 'Unknown agent type: "%s".' "${agent_type}"
         ;;
@@ -88,12 +91,14 @@ function subfile
 #
 function import_smf_manifest
 {
-    local method_in="$ROOT/smf/method/$AGENT.in"
-    local method_out="$ROOT/smf/method/$AGENT"
+    local method_in="$ROOT/smf/method/${AGENT}-setup.in"
+    local method_out="$ROOT/smf/method/${AGENT}-setup"
     local manifest0_in="$ROOT/smf/manifests/$AGENT.xml.in"
     local manifest0_out="$SMF_DIR/$AGENT.xml"
     local manifest1_in="$ROOT/smf/manifests/$AGENT-update.xml.in"
     local manifest1_out="$SMF_DIR/$AGENT-update.xml"
+    local manifest2_in="$ROOT/smf/manifests/${AGENT}-setup.xml.in"
+    local manifest2_out="$SMF_DIR/${AGENT}-setup.xml"
 
     if [[ ! -f "${method_in}" ]]; then
         fatal 'could not find smf method input file: %s' "${method_in}"
@@ -118,6 +123,11 @@ function import_smf_manifest
     if ! subfile "${manifest1_in}" "${manifest1_out}" 'update' ||
       ! svccfg import "${manifest1_out}"; then
         fatal 'could not process smf manifest (%s)' "${manifest1_in}"
+    fi
+
+    if ! subfile "${manifest2_in}" "${manifest2_out}" 'setup' ||
+      ! svccfg import "${manifest2_out}"; then
+        fatal 'could not process smf manifest (%s)' "${manifest2_in}"
     fi
 }
 
