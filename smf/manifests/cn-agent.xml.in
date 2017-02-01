@@ -32,7 +32,7 @@
       <method_context>
         <method_credential user="root" group="staff"/>
         <method_environment>
-          <envvar name="PATH" value="@@PREFIX@@/bin:/usr/local/bin:/opt/local/bin:/usr/bin:/usr/sbin:/bin"/>
+          <envvar name="PATH" value="@@PREFIX@@/bin:/usr/bin:/usr/sbin"/>
           <envvar name="PORT" value="@@PORT@@"/>
         </method_environment>
       </method_context>
