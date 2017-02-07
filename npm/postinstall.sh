@@ -6,7 +6,7 @@
 #
 
 #
-# Copyright 2015 Joyent, Inc.
+# Copyright 2017 Joyent, Inc.
 #
 
 if [[ "${SDC_AGENT_SKIP_LIFECYCLE:-no}" = "yes" ]]; then
@@ -67,6 +67,10 @@ function subfile
         file_port='5310'
         file_enabled='false'
         ;;
+    setup)
+        file_enabled='true'
+        file_port='0'
+        ;;
     *)
         fatal 'Unknown agent type: "%s".' "${agent_type}"
         ;;
@@ -83,41 +87,42 @@ function subfile
 }
 
 #
-# Replace substitution tokens in the SMF method and manifest files, and then
-# import the SMF service.
+# Replace substitution tokens in the SMF manifest files, and then import the
+# SMF services.
 #
 function import_smf_manifest
 {
-    local method_in="$ROOT/smf/method/$AGENT.in"
-    local method_out="$ROOT/smf/method/$AGENT"
-    local manifest0_in="$ROOT/smf/manifests/$AGENT.xml.in"
-    local manifest0_out="$SMF_DIR/$AGENT.xml"
-    local manifest1_in="$ROOT/smf/manifests/$AGENT-update.xml.in"
-    local manifest1_out="$SMF_DIR/$AGENT-update.xml"
+    local agent_manifest_in="$ROOT/smf/manifests/$AGENT.xml.in"
+    local agent_manifest_out="$SMF_DIR/$AGENT.xml"
+    local agent_update_manifest_in="$ROOT/smf/manifests/$AGENT-update.xml.in"
+    local agent_update_manifest_out="$SMF_DIR/$AGENT-update.xml"
+    local agent_setup_manifest_in="$ROOT/smf/manifests/${AGENT}-setup.xml.in"
+    local agent_setup_manifest_out="$SMF_DIR/${AGENT}-setup.xml"
 
-    if [[ ! -f "${method_in}" ]]; then
-        fatal 'could not find smf method input file: %s' "${method_in}"
+    if [[ ! -f "${agent_manifest_in}" ]]; then
+        fatal 'could not find smf manifest input file: %s' "${agent_manifest_in}"
     fi
-    if [[ ! -f "${manifest0_in}" ]]; then
-        fatal 'could not find smf manifest input file: %s' "${manifest0_in}"
-    fi
-    if [[ ! -f "${manifest1_in}" ]]; then
-        fatal 'could not find smf manifest input file: %s' "${manifest1_in}"
+    if [[ ! -f "${agent_update_manifest_in}" ]]; then
+        fatal 'could not find smf manifest input file: %s'
+        "${agent_update_manifest_in}"
     fi
 
-    if ! subfile "${method_in}" "${method_out}" 'normal' ||
-      ! chmod +x "${method_out}"; then
-        fatal 'could not process smf method (%s)' "${method_in}"
+    if ! subfile "${agent_manifest_in}" "${agent_manifest_out}" 'normal' ||
+      ! svccfg import "${agent_manifest_out}"; then
+        fatal 'could not process smf manifest (%s)' "${agent_manifest_in}"
     fi
 
-    if ! subfile "${manifest0_in}" "${manifest0_out}" 'normal' ||
-      ! svccfg import "${manifest0_out}"; then
-        fatal 'could not process smf manifest (%s)' "${manifest0_in}"
+    if ! subfile "${agent_update_manifest_in}" "${agent_update_manifest_out}" \
+      'update' ||
+      ! svccfg import "${agent_update_manifest_out}"; then
+        fatal 'could not process smf manifest (%s)' \
+            "${agent_update_manifest_in}"
     fi
 
-    if ! subfile "${manifest1_in}" "${manifest1_out}" 'update' ||
-      ! svccfg import "${manifest1_out}"; then
-        fatal 'could not process smf manifest (%s)' "${manifest1_in}"
+    if ! subfile "${agent_setup_manifest_in}" "${agent_setup_manifest_out}" \
+      'setup' ||
+      ! svccfg import "${agent_setup_manifest_out}"; then
+        fatal 'could not process smf manifest (%s)' "${agent_setup_manifest_in}"
     fi
 }
 

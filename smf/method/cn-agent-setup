@@ -6,11 +6,12 @@
 #
 
 #
-# Copyright (c) 2015, Joyent, Inc.
+# Copyright (c) 2017, Joyent, Inc.
 #
 
 #
-# SMF Startup script for cn-agent
+# Runs on node (CN + HN) boot to setup log rotation for cn-agent logs.
+#
 
 set -o xtrace
 
@@ -54,7 +55,6 @@ function setup_logadm {
 case "$1" in
 'start')
     setup_logadm
-    /usr/bin/ctrun -l child -o noorphan @@ROOT@@/node/bin/node --abort_on_uncaught_exception @@ROOT@@/bin/cn-agent &
     ;;
 
 'stop')

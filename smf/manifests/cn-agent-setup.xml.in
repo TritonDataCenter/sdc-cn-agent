@@ -10,8 +10,8 @@
     Copyright (c) 2017, Joyent, Inc.
 -->
 
-<service_bundle type="manifest" name="cn-agent">
-  <service name="smartdc/agent/cn-agent" type="service" version="@@VERSION@@">
+<service_bundle type="manifest" name="cn-agent-setup">
+  <service name="smartdc/agent/cn-agent-setup" type="service" version="@@VERSION@@">
 
     <create_default_instance enabled="@@ENABLED@@"/>
     <single_instance/>
@@ -20,38 +20,24 @@
       <service_fmri value="svc:/milestone/network:default"/>
     </dependency>
 
-    <dependency name="filesystem" grouping="require_all" restart_on="error" type="service">
-      <service_fmri value="svc:/system/filesystem/local"/>
-    </dependency>
-
     <exec_method
       type="method"
       name="start"
-      exec="/usr/bin/ctrun -l child -o noorphan @@ROOT@@/node/bin/node --abort_on_uncaught_exception @@ROOT@@/bin/cn-agent &amp;"
-      timeout_seconds="60">
+      exec="@@ROOT@@/smf/method/cn-agent-setup %m"
+      timeout_seconds="600">
       <method_context>
         <method_credential user="root" group="staff"/>
         <method_environment>
-          <envvar name="PATH" value="@@PREFIX@@/bin:/usr/bin:/usr/sbin"/>
-          <envvar name="PORT" value="@@PORT@@"/>
+          <envvar name="PATH" value="/usr/bin:/usr/sbin"/>
         </method_environment>
       </method_context>
     </exec_method>
 
-    <exec_method type="method" name="restart" exec=":kill" timeout_seconds="60">
-      <method_context>
-        <method_credential user="root" group="staff"/>
-      </method_context>
-    </exec_method>
-
-    <exec_method type="method" name="stop" exec=":kill" timeout_seconds="60">
-      <method_context>
-        <method_credential user="root" group="staff"/>
-      </method_context>
-    </exec_method>
+    <exec_method type="method" name="stop" exec=":true" timeout_seconds="60" />
 
     <property_group name="startd" type="framework">
-      <propval name="ignore_error" type="astring" value="core,signal"/>
+      <propval name="duration" type="astring" value="transient" />
+      <propval name="ignore_error" type="astring" value="core,signal" />
     </property_group>
 
     <property_group name="application" type="application">
@@ -61,7 +47,7 @@
 
     <template>
       <common_name>
-        <loctext xml:lang="C">SmartDataCentre Compute Node Agent</loctext>
+        <loctext xml:lang="C">SmartDataCentre Compute Node Agent Setup</loctext>
       </common_name>
     </template>
 

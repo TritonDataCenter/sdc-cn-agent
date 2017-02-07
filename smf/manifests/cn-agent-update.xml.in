@@ -7,7 +7,7 @@
 -->
 
 <!--
-    Copyright (c) 2015, Joyent, Inc.
+    Copyright (c) 2017, Joyent, Inc.
 -->
 
 <service_bundle type="manifest" name="cn-agent-update">
@@ -27,7 +27,7 @@
     <exec_method
       type="method"
       name="start"
-      exec="@@ROOT@@/smf/method/cn-agent %m"
+      exec="/usr/bin/ctrun -l child -o noorphan @@ROOT@@/node/bin/node --abort_on_uncaught_exception @@ROOT@@/bin/cn-agent &amp;"
       timeout_seconds="60">
       <method_context>
         <method_credential user="root" group="staff"/>
