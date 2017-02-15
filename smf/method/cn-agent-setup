@@ -24,8 +24,8 @@ function setup_logadm {
     #
     # 1. the regular 'cn-agent' SMF log
     #
-    logadm -r cn-agent_logs             # old pre-AGENT-840 logname
-    logadm -w cn_agent_logs -C 168 -S 1g -c -p 1h \
+    logadm -v -r cn-agent_logs             # old pre-AGENT-840 logname
+    logadm -v -w cn_agent_logs -C 168 -S 1g -c -p 1h \
         -t '/var/log/cn-agent/cn-agent_$nodename_%FT%H:%M:%S.log' \
         /var/svc/log/*cn-agent*.log
 
@@ -35,10 +35,10 @@ function setup_logadm {
     #    script to roll those up into "/var/log/cn-agent/cn-agent-tasks.log" and
     #    then `logadm` does the usual rotation to the '-t ...' template filename.
     #
-    logadm -r cn-agent_task_logs        # old pre-AGENT-840 logname
+    logadm -v -r cn-agent_task_logs        # old pre-AGENT-840 logname
     mkdir -p /var/log/cn-agent/logs/
     touch /var/log/cn-agent/cn-agent-tasks.log
-    logadm -w cn_agent_task_logs -C 168 -S 1g -p 1h \
+    logadm -v -w cn_agent_task_logs -C 168 -S 1g -p 1h \
         -b '/usr/vm/sbin/rotate-logs.sh -m /var/log/cn-agent/logs/ /var/log/cn-agent/cn-agent-tasks.log' \
         -t '/var/log/cn-agent/cn-agent-tasks_$nodename_%FT%H:%M:%S.log' \
         /var/log/cn-agent/cn-agent-tasks.log
@@ -47,8 +47,8 @@ function setup_logadm {
     # that the default '-C' (from
     # https://github.com/joyent/smartos-live/blob/master/overlay/generic/etc/logadm.conf)
     # doesn't defeat our attempts to rotate out of "/var/svc/log".
-    /usr/sbin/logadm -r smf_logs
-    /usr/sbin/logadm -w smf_logs -C 8 -c -s 1m '/var/svc/log/*.log'
+    /usr/sbin/logadm -v -r smf_logs
+    /usr/sbin/logadm -v -w smf_logs -C 8 -c -s 1m '/var/svc/log/*.log'
 }
 
 
