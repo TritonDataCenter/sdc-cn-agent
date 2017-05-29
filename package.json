@@ -6,7 +6,7 @@
   "private": true,
   "dependencies": {
     "assert-plus": "1.0.0",
-    "async": "1.5.2",
+    "async": "2.4.1",
     "bunyan": "1.8.5",
     "ctype": "0.5.4",
     "digest-stream": "0.2.2",
