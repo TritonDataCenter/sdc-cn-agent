@@ -24,7 +24,7 @@
     "restify": "4.3.0",
     "rimraf": "2.4.3",
     "sdc-clients": "10.0.3",
-    "sdc-docker-build": "0.3.2",
+    "sdc-docker-build": "0.3.3",
     "semver": "2.2.1",
     "sprintf": "0.1.5",
     "trace-event": "git+https://github.com/joyent/node-trace-event.git#9f7d00b8c3594def9ef534f68c16c215c3dba9f2",
