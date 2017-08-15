@@ -184,6 +184,38 @@ function testTasksHistory(test) {
 }
 
 
+/**
+ * Check that a longer-running task does not run into the default 2 minute
+ * socket timeout in node.
+ */
+function testTaskDurationDefaultTimeout(test) {
+    test.expect(4);
+    var bodyObj = {
+        params: {sleep: 3 * 60}
+    };
+
+    var start = new Date();
+    var TIMEOUT_MS = 60 * 2 * 1000;
+
+    client.post(
+        '/tasks?task=nop',
+        bodyObj,
+        function (err, req, res, tasks) {
+            test.ifError(err);
+            if (!err) {
+                test.ok(res, 'got a response');
+                test.equal(res.statusCode, 200, 'POST /tasks returned 200');
+            }
+
+            var diff = (new Date()) - start;
+
+            test.ok(
+                diff > TIMEOUT_MS,
+                'task did not time out after 2 min');
+            test.done();
+        });
+}
+
 module.exports = {
     setUp: setup,
     tearDown: teardown,
@@ -193,5 +225,7 @@ module.exports = {
     'cannot execute task paused': testCannotRunTaskPaused,
     'resume task handler via http': testResumeTaskHandlerHttp,
     'can execute task after resume': testCanRunTaskAfterResume,
+    'test task duration beyond built-in default':
+        testTaskDurationDefaultTimeout,
     'tasks history': testTasksHistory
 };
