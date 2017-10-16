@@ -32,7 +32,7 @@
     "uuid": "3.0.1",
     "vasync": "1.6.4",
     "verror": "1.9.0",
-    "vmadm": "git+https://github.com/joyent/node-vmadm.git#94e95c6b96c2c5947281a5ea3df763928a65219c",
+    "vmadm": "git+https://github.com/joyent/node-vmadm.git#TOOLS-1892",
     "zfs": "git+https://github.com/joyent/node-zfs.git#657a90d9424c45066e3e0919dfe9b34f5636e0e9"
   },
   "sdcDependencies": {
