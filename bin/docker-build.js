@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2017, Joyent, Inc.
+ * Copyright (c) 2018, Joyent, Inc.
  */
 
 /*
@@ -35,7 +35,7 @@ var sprintf = require('sprintf').sprintf;
 var zfs = require('zfs').zfs;
 
 var LineStream = require('lstream');
-var smartDcConfig = require('../lib/task_agent/smartdc-config');
+var smartDcConfig = require('../lib/smartdc-config');
 
 
 var SERVER_CLOSE_TIMEOUT = 60 * 1000; // 1 minute

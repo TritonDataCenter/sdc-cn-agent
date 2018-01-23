@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2015, Joyent, Inc.
+ * Copyright (c) 2018, Joyent, Inc.
  */
 
 /*
@@ -126,7 +126,7 @@
 var net = require('net');
 var assert = require('assert-plus');
 var bunyan = require('bunyan');
-var smartDcConfig = require('../lib/task_agent/smartdc-config');
+var smartDcConfig = require('../lib/smartdc-config');
 var kstat = require('kstat');
 var sprintf = require('sprintf').sprintf;
 
