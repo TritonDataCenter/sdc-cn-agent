@@ -10,6 +10,8 @@
 
 /*
  * Overview: Handler docker build commands.
+ *
+ * Note: This is specific to the smartos backend.
  */
 
 var child_process = require('child_process');
@@ -35,7 +37,7 @@ var sprintf = require('sprintf').sprintf;
 var zfs = require('zfs').zfs;
 
 var LineStream = require('lstream');
-var smartDcConfig = require('../lib/smartdc-config');
+var smartDcConfig = require('../lib/backends/smartos/smartdc-config');
 
 
 var SERVER_CLOSE_TIMEOUT = 60 * 1000; // 1 minute

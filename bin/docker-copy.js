@@ -5,7 +5,9 @@
  */
 
 /*
- * Copyright (c) 2016, Joyent, Inc.
+ * Copyright (c) 2018, Joyent, Inc.
+ *
+ * Note: This is specific to the smartos backend.
  */
 
 var net = require('net');

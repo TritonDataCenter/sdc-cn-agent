@@ -9,6 +9,8 @@
  */
 
 /*
+ * Note: this is specific to the smartos backend.
+ *
  * # Overview:
  *
  * Provides 'docker stat' information over a socket connection.
@@ -126,7 +128,7 @@
 var net = require('net');
 var assert = require('assert-plus');
 var bunyan = require('bunyan');
-var smartDcConfig = require('../lib/smartdc-config');
+var smartDcConfig = require('../lib/backends/smartos/smartdc-config');
 var kstat = require('kstat');
 var sprintf = require('sprintf').sprintf;
 

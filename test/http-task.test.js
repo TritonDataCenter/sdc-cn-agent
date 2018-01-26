@@ -5,13 +5,15 @@
  */
 
 /*
- * Copyright (c) 2015, Joyent, Inc.
+ * Copyright (c) 2018, Joyent, Inc.
  */
+
+// This testcase is currently smartos specific.
 
 var testCase = require('nodeunit').testCase;
 var restify = require('restify');
 var Logger = require('bunyan');
-var smartdcconfig = require('../lib/smartdc-config');
+var smartdcconfig = require('../lib/backends/smartos/smartdc-config');
 
 var PROVISIONER_PORT = 5309;
 var client;
