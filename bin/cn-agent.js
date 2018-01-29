@@ -5,17 +5,14 @@
  */
 
 /*
- * Copyright (c) 2015, Joyent, Inc.
+ * Copyright (c) 2018, Joyent, Inc.
  */
 
-var bunyan = require('bunyan');
-var exec = require('child_process').exec;
-var fs = require('fs');
-var once = require('once');
 var os = require('os');
 var path = require('path');
-var tty = require('tty');
-var util = require('util');
+
+var assert = require('assert-plus');
+var bunyan = require('bunyan');
 var vasync = require('vasync');
 var verror = require('verror');
 
@@ -23,88 +20,144 @@ var AgentHttpServer = require('../lib/server');
 var App = require('../lib/app');
 var TaskAgent = require('../lib/task_agent/task_agent');
 var dispatch = require('../lib/task_agent/dispatch');
-var sdcconfig = require('../lib/smartdc-config');
 
 var createHttpTaskDispatchFn = dispatch.createHttpTaskDispatchFn;
 var createTaskDispatchFn = dispatch.createTaskDispatchFn;
 
+var BACKEND_DIR = '../lib/backends';
+var LOGNAME = 'cn-agent';
+
+
 main();
 
-function main() {
-    var logname = 'cn-agent';
+function loadBackend(opts) {
+    var Backend;
+    var backendName = os.platform();
 
-    var log = bunyan.createLogger({ name: logname });
+    assert.object(opts, 'opts');
+    assert.object(opts.log, 'opts.log');
+
+    if (process.env.CN_AGENT_BACKEND) {
+        // allow overriding the backend (useful for testing)
+        backendName = process.env.CN_AGENT_BACKEND;
+    } else if (backendName === 'sunos') {
+        backendName = 'smartos';
+    }
+
+    // This will throw if backend doesn't exist
+    Backend = require(path.join(BACKEND_DIR, backendName));
+
+    // Backends should set self.name = opts.backendName.
+    opts.backendName = backendName;
+
+    return (new Backend(opts));
+}
+
+function main() {
+    var log;
     var sysinfo;
     var sdc_config;
 
-
-    // The plan is to migrate to using this file as the entire configuration
-    // needed for the cn-agent. For now we rely on the presence of this file
-    // to detect if we are intending to run the agent, which is why no_rabbit
-    // is false by default
-    var agentConfigPath = '/opt/smartdc/agents/etc/cn-agent.config.json';
     var agentConfig;
+    var backend;
 
-    try {
-        agentConfig = JSON.parse(fs.readFileSync(agentConfigPath, 'utf-8'));
-    } catch (e) {
-        log.error(e, 'Could not parse agent config: "%s", '
-            + 'setting no_rabbit flag to false', e.message);
-        agentConfig = { no_rabbit: false };
-    }
+    log = bunyan.createLogger({
+        level: process.env.CN_AGENT_LOG_LEVEL,
+        name: LOGNAME
+    });
 
-    if (!agentConfig.no_rabbit) {
-        log.warn('"no_rabbit" flag is not true, cn-agent will now sleep');
-        // http://nodejs.org/docs/latest/api/all.html#all_settimeout_cb_ms
-        // ...The timeout must be in the range of 1-2,147,483,647 inclusive...
-        setInterval(function () {}, 2000000000);
-    }
+    backend = loadBackend({
+        log: log
+    });
 
+    assert.object(backend, 'backend');
+    assert.string(backend.name, 'backend.name');
 
-    vasync.waterfall([
-        function (next) {
-            sdcconfig.sysinfo(function (err, sysinfoObj) {
-                if (err) {
-                    next(new verror.VError(err, 'fetching sysinfo'));
+    log.info('cn-agent starting with backend "' + backend.name + '"');
+
+    vasync.pipeline({
+        funcs: [
+            function getAgentConfig(_, cb) {
+                backend.getAgentConfig(function onAgentConfig(err, config) {
+                    if (err) {
+                        cb(new verror.VError(err, 'fetching agent config'));
+                        return;
+                    }
+                    agentConfig = config;
+                    cb();
+                });
+            }, function ensureNoRabbit(_, cb) {
+                if (agentConfig.no_rabbit) {
+                    cb();
                     return;
                 }
 
-                sysinfo = sysinfoObj;
-                next();
-            });
-        },
-        function (next) {
-            sdcconfig.sdcConfig(function (error, configObj) {
-                if (error) {
-                    next(new verror.VError(error, 'fetching SDC config'));
-                    return;
-                }
-                sdc_config = configObj;
-                next();
-            });
+                log.warn('"no_rabbit" flag is not true, ' +
+                    'cn-agent will now sleep');
+                /* JSSTYLED */
+                // http://nodejs.org/docs/latest/api/all.html#all_settimeout_cb_ms
+                // ...The timeout must be in the range of 1-2,147,483,647
+                // inclusive...
+                setInterval(function () {}, 2000000000);
+
+                // Important: in this case we're *not* calling cb() because we
+                // want to hang forever. It's what rabbit holdouts deserve.
+
+            }, function getSysinfo(_, cb) {
+                backend.getSysinfo(function onSysinfo(err, sysinfoObj) {
+                    if (err) {
+                        cb(new verror.VError(err, 'fetching sysinfo'));
+                        return;
+                    }
+                    sysinfo = sysinfoObj;
+                    cb();
+                });
+            }, function getSdcConfig(_, cb) {
+                backend.getSdcConfig(function onSdcConfig(err, config) {
+                    if (err) {
+                        cb(new verror.VError(err, 'fetching SDC config'));
+                        return;
+                    }
+                    sdc_config = config;
+                    cb();
+                });
+            }
+        ]
+    }, function onPipelineComplete(err) {
+        var agentServer;
+        var app;
+        var ip;
+        var options;
+
+        if (err) {
+            throw err;
         }
-    ],
-    function (e) {
-        var ip = firstAdminIp(sysinfo);
 
-        var agentServer = new AgentHttpServer({
+        ip = firstAdminIp(sysinfo);
+
+        agentServer = new AgentHttpServer({
             bindip: ip,
             log: log,
             uuid: sysinfo.UUID
         });
         agentServer.start();
 
-        var options = {
-            uuid: sysinfo.UUID,
-            log: log,
-            tasklogdir: '/var/log/' + logname + '/logs',
-            logname: logname,
-            taskspath: path.join(__dirname, '..', 'lib/tasks'),
+        options = {
             agentserver: agentServer,
-            sdc_config: sdc_config
+            backend: backend,
+            config: agentConfig,
+            log: log,
+            logname: LOGNAME,
+            sdc_config: sdc_config,
+            sysinfo: sysinfo,
+            tasklogdir: agentConfig.tasklogdir ||
+                '/var/log/' + LOGNAME + '/logs',
+            taskspath: path.join(__dirname, '..',
+                'lib/backends', backend.name, 'tasks'),
+            uuid: sysinfo.UUID
         };
 
-        var app = new App(options);
+        app = new App(options);
 
         // EXPERIMENTAL
         if (agentConfig.fluentd_host) {
@@ -117,19 +170,23 @@ function main() {
 
 
 function firstAdminIp(sysinfo) {
+    var iface;
     var interfaces;
+    var ip;
+    var isAdmin;
+    var nic;
 
     interfaces = sysinfo['Network Interfaces'];
 
-    for (var iface in interfaces) {
+    for (iface in interfaces) {
         if (!interfaces.hasOwnProperty(iface)) {
             continue;
         }
 
-        var nic = interfaces[iface]['NIC Names'];
-        var isAdmin = nic.indexOf('admin') !== -1;
+        nic = interfaces[iface]['NIC Names'];
+        isAdmin = nic.indexOf('admin') !== -1;
         if (isAdmin) {
-            var ip = interfaces[iface].ip4addr;
+            ip = interfaces[iface].ip4addr;
             return ip;
         }
     }
