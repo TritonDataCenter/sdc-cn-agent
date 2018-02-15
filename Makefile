@@ -37,7 +37,7 @@ JSSTYLE_FLAGS =		-o indent=4,doxygen,unparenthesized-return=0
 # doesn't know about (@@ENABLED@@)
 # SMF_MANIFESTS_IN = smf/manifests/cn-agent.xml.in
 
-NODE_PREBUILT_VERSION =	v4.6.1
+NODE_PREBUILT_VERSION =	v6.12.2
 NODE_PREBUILT_TAG =	gz
 ifeq ($(shell uname -s),SunOS)
 NODE_PREBUILT_IMAGE =	18b094b0-eb01-11e5-80c1-175dac7ddf02
