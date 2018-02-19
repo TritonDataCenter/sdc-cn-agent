@@ -6,7 +6,7 @@
 #
 
 #
-# Copyright 2016 Joyent, Inc.
+# Copyright 2018 Joyent, Inc.
 #
 
 if [[ "${SDC_AGENT_SKIP_LIFECYCLE:-no}" = "yes" ]]; then
@@ -14,10 +14,10 @@ if [[ "${SDC_AGENT_SKIP_LIFECYCLE:-no}" = "yes" ]]; then
     exit 0
 fi
 
-# min-platform is now 20141030T081701Z, so refuse to install if someone is
+# min-platform is now 20151126T062538Z, so refuse to install if someone is
 # trying to load on something older.
-if [[ $(uname -v | cut -d '_' -f2 | tr -d '[A-Z]') -lt 20141030081701 ]]; then
-    echo "FATAL: min-platform for this agent is 20141030T081701Z" >&2
+if [[ $(uname -v | cut -d '_' -f2 | tr -d '[A-Z]') -lt 20151126T062538 ]]; then
+    echo "FATAL: min-platform for this agent is 20151126T062538Z" >&2
     exit 2
 fi
 
