@@ -20,7 +20,7 @@ compute node. It acts as an externally visible interface to subsystems within
 the server. 
 
 It is responsible for executing "tasks", scripts which break down some
-unit of work into a number of steps to be completed.  This may be may range
+unit of work into a number of steps to be completed.  This may range
 from creating a virtual machine to something as simple as creating or listing
 ZFS datasets.
 

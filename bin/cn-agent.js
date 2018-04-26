@@ -65,6 +65,7 @@ function main() {
 
     var agentConfig;
     var backend;
+    var adminIp;
 
     log = bunyan.createLogger({
         level: process.env.CN_AGENT_LOG_LEVEL,
@@ -126,22 +127,28 @@ function main() {
                     sdc_config = config;
                     cb();
                 });
+            }, function getAdminIp(_, cb) {
+                backend.getFirstAdminIp({}, sysinfo, function (err, ip) {
+                    if (err) {
+                        cb(new verror.VError(err, 'fetching admin IP'));
+                        return;
+                    }
+                    adminIp = ip;
+                    cb();
+                });
             }
         ]
     }, function onPipelineComplete(err) {
         var agentServer;
         var app;
-        var ip;
         var options;
 
         if (err) {
             throw err;
         }
 
-        ip = firstAdminIp(sysinfo);
-
         agentServer = new AgentHttpServer({
-            bindip: ip,
+            bindip: adminIp,
             log: log,
             uuid: sysinfo.UUID
         });
@@ -170,31 +177,6 @@ function main() {
         }
 
         app.start();
+
     });
-}
-
-
-function firstAdminIp(sysinfo) {
-    var iface;
-    var interfaces;
-    var ip;
-    var isAdmin;
-    var nic;
-
-    interfaces = sysinfo['Network Interfaces'];
-
-    for (iface in interfaces) {
-        if (!interfaces.hasOwnProperty(iface)) {
-            continue;
-        }
-
-        nic = interfaces[iface]['NIC Names'];
-        isAdmin = nic.indexOf('admin') !== -1;
-        if (isAdmin) {
-            ip = interfaces[iface].ip4addr;
-            return ip;
-        }
-    }
-
-    throw new Error('No NICs with name "admin" detected.');
 }

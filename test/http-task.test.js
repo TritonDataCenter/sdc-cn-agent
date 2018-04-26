@@ -18,44 +18,20 @@ var smartdcconfig = require('../lib/backends/smartos/smartdc-config');
 var PROVISIONER_PORT = 5309;
 var client;
 
-function firstAdminIp(sysinfo) {
-    var interfaces;
-
-    interfaces = sysinfo['Network Interfaces'];
-
-    for (var iface in interfaces) {
-        if (!interfaces.hasOwnProperty(iface)) {
-            continue;
-        }
-
-        var nic = interfaces[iface]['NIC Names'];
-        var isAdmin = nic.indexOf('admin') !== -1;
-        if (isAdmin) {
-            var ip = interfaces[iface].ip4addr;
-            return ip;
-        }
-    }
-
-    throw new Error('No NICs with name "admin" detected.');
-}
-
 function setup(cb) {
-    smartdcconfig.sysinfo(function (err, sysinfo) {
-        var adminip;
-
+    smartdcconfig.getFirstAdminIp(function (err, adminIp) {
         if (err) {
             cb(err);
             return;
         }
 
-        adminip = firstAdminIp(sysinfo);
-        if (!adminip) {
+        if (!adminIp) {
             throw new Error('failed to find admin IP');
         }
 
         client = restify.createJsonClient({
             agent: false,
-            url: 'http://' + adminip + ':' + PROVISIONER_PORT
+            url: 'http://' + adminIp + ':' + PROVISIONER_PORT
         });
 
         cb();
