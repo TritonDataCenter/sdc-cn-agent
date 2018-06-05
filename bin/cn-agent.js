@@ -44,6 +44,11 @@ function loadBackend(opts) {
         backendName = 'smartos';
     }
 
+    // Special case for the dummy backend, we allow to specify the server uuid.
+    if (backendName === 'dummy' && process.env.CN_AGENT_SERVER_UUID) {
+        opts.serverUuid = process.env.CN_AGENT_SERVER_UUID;
+    }
+
     // This will throw if backend doesn't exist
     Backend = require(path.join(BACKEND_DIR, backendName));
 
