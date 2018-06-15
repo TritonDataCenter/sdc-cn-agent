@@ -83,7 +83,7 @@ function main() {
     vasync.pipeline({
         funcs: [
             function getAgentConfig(_, cb) {
-                backend.getAgentConfig(function onAgentConfig(err, config) {
+                backend.getAgentConfig({}, function onAgentConfig(err, config) {
                     if (err) {
                         cb(new verror.VError(err, 'fetching agent config'));
                         return;
@@ -109,7 +109,7 @@ function main() {
                 // want to hang forever. It's what rabbit holdouts deserve.
 
             }, function getSysinfo(_, cb) {
-                backend.getSysinfo(function onSysinfo(err, sysinfoObj) {
+                backend.getSysinfo({}, function onSysinfo(err, sysinfoObj) {
                     if (err) {
                         cb(new verror.VError(err, 'fetching sysinfo'));
                         return;
@@ -118,7 +118,7 @@ function main() {
                     cb();
                 });
             }, function getSdcConfig(_, cb) {
-                backend.getSdcConfig(function onSdcConfig(err, config) {
+                backend.getSdcConfig({}, function onSdcConfig(err, config) {
                     if (err) {
                         cb(new verror.VError(err, 'fetching SDC config'));
                         return;
