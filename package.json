@@ -13,7 +13,7 @@
     "cueball": "2.7.1",
     "digest-stream": "0.2.2",
     "effluent-logger": "git+https://github.com/joshwilsdon/effluent-logger.git#d662f161a07f94045ad2afb45442931511c40e51",
-    "imgmanifest": "3.0.0",
+    "imgmanifest": "3.1.0",
     "jsprim": "2.0.0",
     "kstat": "1.0.1",
     "lazy-property": "1.0.0",
