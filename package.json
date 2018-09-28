@@ -1,7 +1,7 @@
 {
   "name": "cn-agent",
   "description": "Triton Compute Node Agent",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "author": "Joyent (joyent.com)",
   "private": true,
   "dependencies": {
@@ -33,7 +33,7 @@
     "uuid": "3.0.1",
     "vasync": "1.6.4",
     "verror": "1.9.0",
-    "vmadm": "git+https://github.com/joyent/node-vmadm.git#bfe4d6913785cfaa0abe7e008634794942553b29",
+    "vmadm": "git+https://github.com/joyent/node-vmadm.git#grr-TRITON-805",
     "zfs": "git+https://github.com/joyent/node-zfs.git#657a90d9424c45066e3e0919dfe9b34f5636e0e9"
   },
   "sdcDependencies": {
