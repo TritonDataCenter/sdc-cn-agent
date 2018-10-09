@@ -25,7 +25,7 @@
     "pty.js": "0.3.1",
     "restify": "4.3.0",
     "rimraf": "2.4.3",
-    "sdc-clients": "10.0.3",
+    "sdc-clients": "11.3.1",
     "sdc-docker-build": "0.3.3",
     "semver": "5.4.1",
     "sprintf": "0.1.5",
