@@ -18,7 +18,6 @@ var verror = require('verror');
 
 var AgentHttpServer = require('../lib/server');
 var App = require('../lib/app');
-var TaskAgent = require('../lib/task_agent/task_agent');
 var dispatch = require('../lib/task_agent/dispatch');
 
 var createHttpTaskDispatchFn = dispatch.createHttpTaskDispatchFn;
