@@ -5,7 +5,7 @@
 #
 
 #
-# Copyright 2016 Joyent, Inc.
+# Copyright (c) 2018, Joyent, Inc.
 #
 
 #
@@ -45,7 +45,14 @@ endif
 
 # Included definitions
 include ./tools/mk/Makefile.defs
-include ./tools/mk/Makefile.node_prebuilt.defs
+ifeq ($(shell uname -s),SunOS)
+	include ./tools/mk/Makefile.node_prebuilt.defs
+else
+	NPM=npm
+	NODE=node
+	NPM_EXEC=$(shell which npm)
+	NODE_EXEC=$(shell which node)
+endif
 include ./tools/mk/Makefile.node_deps.defs
 include ./tools/mk/Makefile.smf.defs
 
@@ -175,8 +182,23 @@ dumpvar:
 clean::
 	-cd deps/zfs_snapshot_tar && $(MAKE) clobber
 
+# Here "cutting a release" is just tagging the current commit with
+# "v(package.json version)". We don't publish this to npm.
+.PHONY: cutarelease
+cutarelease:
+	@echo "# Ensure working copy is clean."
+	[[ -z `git status --short` ]]  # If this fails, the working dir is dirty.
+	@echo "# Ensure have 'json' tool."
+	which json 2>/dev/null 1>/dev/null
+	ver=$(shell cat package.json | json version) && \
+	    git tag "v$$ver" && \
+	    git push origin "v$$ver"
+
+
 include ./tools/mk/Makefile.deps
-include ./tools/mk/Makefile.node_prebuilt.targ
+ifeq ($(shell uname -s),SunOS)
+	include ./tools/mk/Makefile.node_prebuilt.targ
+endif
 include ./tools/mk/Makefile.node_deps.targ
 include ./tools/mk/Makefile.smf.targ
 include ./tools/mk/Makefile.targ
