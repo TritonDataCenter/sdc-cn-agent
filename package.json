@@ -1,7 +1,7 @@
 {
   "name": "cn-agent",
   "description": "Triton Compute Node Agent",
-  "version": "2.7.0",
+  "version": "2.7.1",
   "author": "Joyent (joyent.com)",
   "private": true,
   "dependencies": {
@@ -29,6 +29,7 @@
     "semver": "5.4.1",
     "sprintf": "0.1.5",
     "trace-event": "git+https://github.com/joyent/node-trace-event.git#9f7d00b8c3594def9ef534f68c16c215c3dba9f2",
+    "triton-netconfig": "1.1.0",
     "uuid": "3.0.1",
     "vasync": "1.6.4",
     "verror": "1.9.0",
