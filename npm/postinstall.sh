@@ -6,7 +6,7 @@
 #
 
 #
-# Copyright 2017 Joyent, Inc.
+# Copyright 2019 Joyent, Inc.
 #
 
 if [[ "${SDC_AGENT_SKIP_LIFECYCLE:-no}" = "yes" ]]; then
@@ -168,6 +168,10 @@ function adopt_instance
     local retry=10
     local url
     local data
+    local server_uuid
+    local image_uuid
+    server_uuid=$(/usr/bin/sysinfo|json UUID)
+    image_uuid="$(<${ROOT}/image_uuid)"
 
     if [[ -z "${instance_uuid}" ]]; then
         fatal 'must pass instance_uuid'
@@ -194,7 +198,11 @@ function adopt_instance
         url="${SAPI_URL}/instances"
         data="{
             \"service_uuid\": \"${service_uuid}\",
-            \"uuid\": \"${instance_uuid}\"
+            \"uuid\": \"${instance_uuid}\",
+            \"params\": {
+                \"server_uuid\": \"${server_uuid}\",
+                \"image_uuid\": \"${image_uuid}\"
+            }
         }"
         if ! curl -sSf -X POST -H 'Content-Type: application/json' \
           -d "${data}" "${url}"; then
