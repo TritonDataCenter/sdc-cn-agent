@@ -2,6 +2,7 @@
 /tmp
 /log
 /*.tar.gz
+bits
 build
 describe
 docs/*.json

@@ -10,3 +10,6 @@
 [submodule "deps/zfs_snapshot_tar"]
 	path = deps/zfs_snapshot_tar
 	url = https://github.com/joyent/zfs_snapshot_tar.git
+[submodule "deps/eng"]
+	path = deps/eng
+	url = git@github.com:joyent/eng.git

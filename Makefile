@@ -5,7 +5,7 @@
 #
 
 #
-# Copyright (c) 2018, Joyent, Inc.
+# Copyright (c) 2019, Joyent, Inc.
 #
 
 #
@@ -44,22 +44,23 @@ NODE_PREBUILT_IMAGE =	18b094b0-eb01-11e5-80c1-175dac7ddf02
 endif
 
 # Included definitions
-include ./tools/mk/Makefile.defs
+ENGBLD_REQUIRE := $(shell git submodule update --init deps/eng)
+include ./deps/eng/tools/mk/Makefile.defs
+TOP ?= $(error Unable to access eng.git submodule Makefiles.)
 ifeq ($(shell uname -s),SunOS)
-	include ./tools/mk/Makefile.node_prebuilt.defs
+	include ./deps/eng/tools/mk/Makefile.node_prebuilt.defs
 else
 	NPM=npm
 	NODE=node
 	NPM_EXEC=$(shell which npm)
 	NODE_EXEC=$(shell which node)
 endif
-include ./tools/mk/Makefile.node_deps.defs
-include ./tools/mk/Makefile.smf.defs
+include ./deps/eng/tools/mk/Makefile.smf.defs
 
 NAME :=	cn-agent
 RELEASE_TARBALL :=	$(NAME)-$(STAMP).tgz
 RELEASE_MANIFEST :=	$(NAME)-$(STAMP).manifest
-RELSTAGEDIR :=		/tmp/$(STAMP)
+RELSTAGEDIR :=		/tmp/$(NAME)-$(STAMP)
 NODEUNIT =		$(TOP)/node_modules/.bin/nodeunit
 ZFS_SNAPSHOT_TAR :=	$(TOP)/deps/zfs_snapshot_tar/zfs_snapshot_tar
 NOMKNOD :=	$(TOP)/src/nomknod/nomknod.32.so \
@@ -104,6 +105,7 @@ $(NOMKNOD): src/nomknod/nomknod.c src/nomknod/Makefile
 	cd $(@D) && $(MAKE)
 
 CLEAN_FILES += $(NODEUNIT) ./node_modules/tap $(NOMKNOD)
+DISTCLEAN_FILES += $(NAME)-*.manifest $(NAME)-*.tgz
 
 .PHONY: test
 test:
@@ -148,7 +150,7 @@ release: all deps docs $(SMF_MANIFESTS)
 	    $(RELSTAGEDIR)/$(NAME)/node/include \
 	    $(RELSTAGEDIR)/$(NAME)/node/share
 	uuid -v4 >$(RELSTAGEDIR)/cn-agent/image_uuid
-	cd $(RELSTAGEDIR) && $(TAR) -zcf $(TOP)/$(RELEASE_TARBALL) *
+	cd $(RELSTAGEDIR) && $(TAR) -I pigz -cf $(TOP)/$(RELEASE_TARBALL) *
 	cat $(TOP)/manifest.tmpl | sed \
 	    -e "s/UUID/$$(cat $(RELSTAGEDIR)/cn-agent/image_uuid)/" \
 	    -e "s/NAME/$$(json name < $(TOP)/package.json)/" \
@@ -160,16 +162,14 @@ release: all deps docs $(SMF_MANIFESTS)
 	    | cut -d ' ' -f2)/" \
 	    > $(TOP)/$(RELEASE_MANIFEST)
 	@rm -rf $(RELSTAGEDIR)
+	# removing build by-product in libarchive
+	rm -f deps/zfs_snapshot_tar/deps/libarchive/build/autoconf/test-driver
 
 .PHONY: publish
 publish: release
-	@if [[ -z "$(BITS_DIR)" ]]; then \
-	    @echo "error: 'BITS_DIR' must be set for 'publish' target"; \
-	    exit 1; \
-	fi
-	mkdir -p $(BITS_DIR)/$(NAME)
-	cp $(TOP)/$(RELEASE_TARBALL) $(BITS_DIR)/$(NAME)/$(RELEASE_TARBALL)
-	cp $(TOP)/$(RELEASE_MANIFEST) $(BITS_DIR)/$(NAME)/$(RELEASE_MANIFEST)
+	mkdir -p $(ENGBLD_BITS_DIR)/$(NAME)
+	cp $(TOP)/$(RELEASE_TARBALL) $(ENGBLD_BITS_DIR)/$(NAME)/$(RELEASE_TARBALL)
+	cp $(TOP)/$(RELEASE_MANIFEST) $(ENGBLD_BITS_DIR)/$(NAME)/$(RELEASE_MANIFEST)
 
 .PHONY: dumpvar
 dumpvar:
@@ -194,11 +194,9 @@ cutarelease:
 	    git tag "v$$ver" && \
 	    git push origin "v$$ver"
 
-
-include ./tools/mk/Makefile.deps
+include ./deps/eng/tools/mk/Makefile.deps
 ifeq ($(shell uname -s),SunOS)
-	include ./tools/mk/Makefile.node_prebuilt.targ
+	include ./deps/eng/tools/mk/Makefile.node_prebuilt.targ
 endif
-include ./tools/mk/Makefile.node_deps.targ
-include ./tools/mk/Makefile.smf.targ
-include ./tools/mk/Makefile.targ
+include ./deps/eng/tools/mk/Makefile.smf.targ
+include ./deps/eng/tools/mk/Makefile.targ
