@@ -5,7 +5,7 @@
 #
 
 #
-# Copyright (c) 2019, Joyent, Inc.
+# Copyright 2019 Joyent, Inc.
 #
 
 #
@@ -62,9 +62,11 @@ RELEASE_TARBALL :=	$(NAME)-$(STAMP).tgz
 RELEASE_MANIFEST :=	$(NAME)-$(STAMP).manifest
 RELSTAGEDIR :=		/tmp/$(NAME)-$(STAMP)
 NODEUNIT =		$(TOP)/node_modules/.bin/nodeunit
+ifeq ($(shell uname -s),SunOS)
 ZFS_SNAPSHOT_TAR :=	$(TOP)/deps/zfs_snapshot_tar/zfs_snapshot_tar
 NOMKNOD :=	$(TOP)/src/nomknod/nomknod.32.so \
 	$(TOP)/src/nomknod/nomknod.64.so
+endif
 
 COAL ?= root@10.99.99.7
 
