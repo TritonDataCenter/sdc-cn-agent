@@ -5,7 +5,7 @@
 #
 
 #
-# Copyright (c) 2019, Joyent, Inc.
+# Copyright 2019 Joyent, Inc.
 #
 
 #
@@ -124,12 +124,10 @@ release: all deps docs $(SMF_MANIFESTS)
 	@echo "Building $(RELEASE_TARBALL)"
 	@mkdir -p $(RELSTAGEDIR)/$(NAME)
 	cd $(TOP) && $(RUN_NPM_INSTALL)
-	(git symbolic-ref HEAD | awk -F/ '{print $$3}' && git describe) > $(TOP)/describe
 	cp -r \
 	    $(TOP)/Makefile \
 	    $(TOP)/bin \
 	    $(TOP)/build/node \
-	    $(TOP)/describe \
 	    $(TOP)/lib \
 	    $(TOP)/node_modules \
 	    $(TOP)/npm \
