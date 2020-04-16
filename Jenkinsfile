@@ -22,7 +22,7 @@ pipeline {
     }
 
     parameters {
-        booleanParameter(
+        booleanParam(
             name: 'TRIGGER_AGENTS_INSTALLER_BUILD',
             defaultValue: true,
             description:
