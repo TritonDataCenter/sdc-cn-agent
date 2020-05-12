@@ -5,7 +5,7 @@
  */
 
 /*
- * Copyright (c) 2018, Joyent, Inc.
+ * Copyright 2020 Joyent, Inc.
  */
 
 var os = require('os');
@@ -49,7 +49,7 @@ function loadBackend(opts) {
         opts.serverUuid = process.env.CN_AGENT_SERVER_UUID;
     }
 
-    // Setup tracing before we do any work
+    // Setup tracing before we do any work.
     tritonTracer.init({
         log: opts.log
     });
