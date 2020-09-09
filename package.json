@@ -1,7 +1,7 @@
 {
   "name": "cn-agent",
   "description": "Triton Compute Node Agent",
-  "version": "2.14.2",
+  "version": "2.14.3",
   "author": "Joyent (joyent.com)",
   "private": true,
   "dependencies": {
@@ -26,7 +26,7 @@
     "restify": "4.3.0",
     "rimraf": "2.4.3",
     "sdc-clients": "11.3.1",
-    "sdc-docker-build": "0.3.3",
+    "sdc-docker-build": "0.3.4",
     "semver": "5.4.1",
     "sprintf": "0.1.5",
     "stream-throttle": "0.1.3",
