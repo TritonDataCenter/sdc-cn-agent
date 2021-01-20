@@ -5,12 +5,8 @@
 #
 
 #
-<<<<<<< HEAD
-# Copyright 2019 Joyent, Inc.
+# Copyright 2021 Joyent, Inc.
 # Copyright 2022 MNX Cloud, Inc.
-=======
-# Copyright 2020 Joyent, Inc.
->>>>>>> 45dc2c9 (Build cn-agent images on/for linux)
 #
 
 #
