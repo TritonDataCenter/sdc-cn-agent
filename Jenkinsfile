@@ -6,6 +6,7 @@
 
 /*
  * Copyright 2021 Joyent, Inc.
+ * Copyright 2022 MNX Cloud, Inc.
  */
 
 @Library('jenkins-joylib@v1.0.8') _
@@ -76,7 +77,7 @@ make print-BRANCH print-STAMP all release publish bits-upload''')
             }
             steps {
                 build(
-                    job:'joyent-org/sdc-agents-installer/master',
+                    job:'TritonDataCenter/sdc-agents-installer/master',
                     wait: false,
                     propagate: false,
                     parameters: [
