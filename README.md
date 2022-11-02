@@ -6,6 +6,7 @@
 
 <!--
     Copyright 2019 Joyent, Inc.
+    Copyright 2022 MNX Cloud, Inc.
 -->
 
 # sdc-cn-agent
@@ -17,7 +18,7 @@ and general documentation at the main
 
 sdc-cn-agent is an RPC mechanism via which a client can interact with a
 compute node. It acts as an externally visible interface to subsystems within
-the server. 
+the server.
 
 It is responsible for executing "tasks", scripts which break down some
 unit of work into a number of steps to be completed.  This may range
