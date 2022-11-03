@@ -36,7 +36,7 @@
     "vasync": "1.6.4",
     "verror": "1.10.0",
     "vmadm": "1.3.0",
-    "zfs": "git+https://github.com/joyent/node-zfs.git#c32a4c38139dd2ce9e2662c00c211c11f9a0da3e"
+    "zfs": "git+https://github.com/TritonDataCenter/node-zfs.git#c32a4c38139dd2ce9e2662c00c211c11f9a0da3e"
   },
   "sdcDependencies": {
     "config-agent": ">=1.3.0"

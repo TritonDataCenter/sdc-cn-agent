@@ -6,6 +6,7 @@
 
 #
 # Copyright 2019 Joyent, Inc.
+# Copyright 2022 MNX Cloud, Inc.
 #
 
 #
@@ -131,12 +132,13 @@ release: all deps docs $(SMF_MANIFESTS)
 	    $(TOP)/lib \
 	    $(TOP)/node_modules \
 	    $(TOP)/npm \
-	    $(TOP)/package.json \
 	    $(TOP)/sapi_manifests \
 	    $(TOP)/smf \
 	    $(TOP)/test \
 	    $(TOP)/tools \
 	    $(RELSTAGEDIR)/$(NAME)
+	json -f $(TOP)/package.json -e 'this.version += "-$(STAMP)"' \
+	    > $(RELSTAGEDIR)/$(NAME)/package.json
 	cp $(ZFS_SNAPSHOT_TAR) \
 	    $(RELSTAGEDIR)/$(NAME)/lib/zfs_snapshot_tar
 	cp $(NOMKNOD) \
