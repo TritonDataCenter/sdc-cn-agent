@@ -178,6 +178,7 @@ release: all deps docs $(SMF_MANIFESTS)
 		$(TOP)/package.json \
 		$(TOP)/sapi_manifests \
 		$(TOP)/smf \
+		$(TOP)/systemd \
 		$(TOP)/test \
 		$(TOP)/tools \
 		$(RELSTAGEDIR)/$(NAME)
