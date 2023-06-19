@@ -303,9 +303,12 @@ function config_agent_restart
 {
     if [[ "$(uname)" == "Linux" ]]; then
         if [[ "$(/usr/bin/systemctl is-active triton-config-agent)" == "active" ]]; then
-            /usr/bin/systemctl reload-or-restart triton-config-agent
-        else
-            fatal 'could not restart config-agent service'
+            if ! /usr/bin/systemctl reload-or-restart triton-config-agent; then
+                fatal 'could not restart config-agent service'
+            fi
+        elif [[ "$(/usr/bin/systemctl is-active triton-config-agent)" == "inactive" ]]; then
+            echo 'config agent is inactive. Skipping restart'
+            return 0
         fi
     else
         local fmri='svc:/smartdc/application/config-agent:default'
