@@ -13,7 +13,7 @@
 #
 [Unit]
 Description=Triton cn-agent used to manage Compute Nodes
-Documentation=https://github.com/joyent/linux-live/tree/linuxcn
+Documentation=https://github.com/TritonDataCenter/linux-live/tree/linuxcn
 After=network.target
 
 [Service]
