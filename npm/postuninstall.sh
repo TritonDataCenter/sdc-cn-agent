@@ -7,6 +7,7 @@
 
 #
 # Copyright 2015 Joyent, Inc.
+# Copyright 2023 MNX Cloud, Inc.
 #
 
 if [[ "${SDC_AGENT_SKIP_LIFECYCLE:-no}" = "yes" ]]; then
@@ -25,9 +26,24 @@ export SMF_DIR="${npm_config_smfdir}"
 
 AGENT="${npm_package_name}"
 
-if svcs "${AGENT}"; then
-    svcadm disable -s "${AGENT}"
-    svccfg delete "${AGENT}"
-fi
+if [[ $(uname -s) != "Linux" ]]; then
 
-rm -f "${SMF_DIR}/${AGENT}.xml"
+    service="triton-${AGENT}"
+
+    if systemctl is-enabled $service; then
+        systemctl disable $service;
+    fi
+
+    rm -f "/usr/lib/systemd/system/${service}.service"
+
+    systemctl daemon-reload
+
+else
+
+    if svcs "${AGENT}"; then
+        svcadm disable -s "${AGENT}"
+        svccfg delete "${AGENT}"
+    fi
+
+    rm -f "${SMF_DIR}/${AGENT}.xml"
+fi
