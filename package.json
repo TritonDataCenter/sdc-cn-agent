@@ -1,7 +1,7 @@
 {
   "name": "cn-agent",
   "description": "Triton Compute Node Agent",
-  "version": "2.14.7",
+  "version": "2.14.8",
   "author": "Joyent (joyent.com)",
   "private": true,
   "dependencies": {
@@ -15,7 +15,7 @@
     "forkexec": "1.1.0",
     "imgmanifest": "3.1.0",
     "jsprim": "2.0.0",
-    "kstat": "1.0.1",
+    "kstat": "1.1.1",
     "lazy-property": "1.0.0",
     "lstream": "0.0.4",
     "mkdirp": "^0.3.4",
