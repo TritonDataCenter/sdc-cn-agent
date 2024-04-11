@@ -138,7 +138,7 @@ release: all deps docs $(SMF_MANIFESTS)
 	    $(TOP)/test \
 	    $(TOP)/tools \
 	    $(RELSTAGEDIR)/$(NAME)
-	ln -s node_modules/kstat/build $(RELSTAGEDIR)/$(NAME) \
+	ln -s node_modules/kstat/build $(RELSTAGEDIR)/$(NAME)
 	json -f $(TOP)/package.json -e 'this.version += "-$(STAMP)"' \
 	    > $(RELSTAGEDIR)/$(NAME)/package.json
 	cp $(ZFS_SNAPSHOT_TAR) \
