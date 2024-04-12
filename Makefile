@@ -6,7 +6,7 @@
 
 #
 # Copyright 2019 Joyent, Inc.
-# Copyright 2022 MNX Cloud, Inc.
+# Copyright 2024 MNX Cloud, Inc.
 #
 
 #
@@ -38,10 +38,11 @@ JSSTYLE_FLAGS =		-o indent=4,doxygen,unparenthesized-return=0
 # doesn't know about (@@ENABLED@@)
 # SMF_MANIFESTS_IN = smf/manifests/cn-agent.xml.in
 
-NODE_PREBUILT_VERSION =	v6.17.0
+NODE_PREBUILT_VERSION =	v6.17.1
 NODE_PREBUILT_TAG =	gz
 ifeq ($(shell uname -s),SunOS)
-NODE_PREBUILT_IMAGE =	18b094b0-eb01-11e5-80c1-175dac7ddf02
+# 19.4.0
+NODE_PREBUILT_IMAGE =	5417ab20-3156-11ea-8b19-2b66f5e7a439
 endif
 
 # Included definitions
@@ -137,6 +138,7 @@ release: all deps docs $(SMF_MANIFESTS)
 	    $(TOP)/test \
 	    $(TOP)/tools \
 	    $(RELSTAGEDIR)/$(NAME)
+	ln -s node_modules/kstat/build $(RELSTAGEDIR)/$(NAME)
 	json -f $(TOP)/package.json -e 'this.version += "-$(STAMP)"' \
 	    > $(RELSTAGEDIR)/$(NAME)/package.json
 	cp $(ZFS_SNAPSHOT_TAR) \

@@ -6,7 +6,7 @@
 
 /*
  * Copyright 2021 Joyent, Inc.
- * Copyright 2022 MNX Cloud, Inc.
+ * Copyright 2024 MNX Cloud, Inc.
  */
 
 @Library('jenkins-joylib@v1.0.8') _
@@ -14,7 +14,7 @@
 pipeline {
 
     agent {
-        label joyCommonLabels(image_ver: '15.4.1')
+        label joyCommonLabels(image_ver: '19.4.0')
     }
 
     options {
