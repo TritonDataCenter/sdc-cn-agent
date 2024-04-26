@@ -28,7 +28,7 @@
     "rimraf": "2.4.3",
     "sdc-clients": "11.3.1",
     "sdc-docker-build": "0.3.4",
-    "semver": "5.4.1",
+    "semver": "5.7.2",
     "sprintf": "0.1.5",
     "stream-throttle": "0.1.3",
     "trace-event": "1.3.2",
